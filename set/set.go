@@ -53,7 +53,7 @@ func (s Set[T]) Update(items []T) {
 
 func (s Set[T]) Intersection(other Set[T]) Set[T] {
 	if other == nil {
-		return InitSet[T](nil)
+		return Set[T]{}
 	}
 
 	result := InitSet[T](nil)
@@ -67,16 +67,13 @@ func (s Set[T]) Intersection(other Set[T]) Set[T] {
 }
 
 func (s Set[T]) And(other Set[T]) Set[T] {
-	if other == nil {
-		return InitSet[T](nil)
-	}
 
 	return s.Intersection(other)
 }
 
 func (s Set[T]) Difference(other Set[T]) Set[T] {
 	if other == nil {
-		return InitSet[T](nil)
+		return Set[T]{}
 	}
 
 	result := InitSet[T](nil)
@@ -90,16 +87,13 @@ func (s Set[T]) Difference(other Set[T]) Set[T] {
 }
 
 func (s Set[T]) Diff(other Set[T]) Set[T] {
-	if other == nil {
-		return InitSet[T](nil)
-	}
 
 	return s.Difference(other)
 }
 
 func (s Set[T]) Union(other Set[T]) Set[T] {
 	if other == nil {
-		return InitSet[T](nil)
+		return Set[T]{}
 	}
 
 	result := InitSet[T](nil)
@@ -115,16 +109,13 @@ func (s Set[T]) Union(other Set[T]) Set[T] {
 }
 
 func (s Set[T]) Or(other Set[T]) Set[T] {
-	if other == nil {
-		return InitSet[T](nil)
-	}
 
 	return s.Union(other)
 }
 
 func (s Set[T]) SymmetricDifference(other Set[T]) Set[T] {
 	if other == nil {
-		return InitSet[T](nil)
+		return Set[T]{}
 	}
 
 	result := InitSet[T](nil)
@@ -144,9 +135,6 @@ func (s Set[T]) SymmetricDifference(other Set[T]) Set[T] {
 }
 
 func (s Set[T]) Xor(other Set[T]) Set[T] {
-	if other == nil {
-		return InitSet[T](nil)
-	}
 
 	return s.SymmetricDifference(other)
 }
