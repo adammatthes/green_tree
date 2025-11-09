@@ -38,6 +38,23 @@ mySet.Remove(1)
 mySet.Remove(2)
 ```
 
+Empty a set:
+```go
+mySet.Clear()
+```
+
+Make a copy of a set:
+```go
+setCopy := set.Copy()
+```
+
+Check if a value is in a Set:
+```go
+if mySet.Contains(value) {
+	// perform logic
+}
+```
+
 You can perform operations on two sets:
 ```go
 intersect := set1.Intersection(set2) // or set1.And(set2)
