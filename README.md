@@ -15,3 +15,51 @@ You can also provide a slice of values at initialization:
 ```go
 mySet := InitSet[int]([]int{1, 2, 3, 4})
 ```
+
+You can either add values one at a time:
+
+```go
+mySet := InitSet[int](nil)
+mySet.Add(1)
+mySet.Add(2)
+```
+
+Or you can provide a slice to update the Set:
+
+```go
+mySet := InitSet[int](nil)
+mySet.Update([]int{1, 1, 1, 2, 3, 4})
+```
+
+Remove values from a set:
+```go
+mySet := InitSet[int]([]int{1, 2, 3, 4})
+mySet.Remove(1)
+mySet.Remove(2)
+```
+
+You can perform operations on two sets:
+```go
+intersect := set1.Intersection(set2) // or set1.And(set2)
+
+difference := set1.Difference(set2) // or set1.Diff(set2)
+
+union := set1.Union(set2) // or set1.Or(set2)
+
+symmetric := set1.SymmetricDifference(set2) // or set1.Xor(set2)
+```
+
+You can identify relationships between sets:
+```go
+if set1.IsDisjoint(set2) {
+	// perform logic
+} else if set1.IsSubset(set2) {
+	// perform logic
+} else if set1.IsSuperset(set2) {
+	// perform logic
+}
+
+if set1.Equals(set2) {
+	// perform logic
+}
+```

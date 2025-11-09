@@ -66,6 +66,14 @@ func (s Set[T]) Intersection(other Set[T]) Set[T] {
 	return result
 }
 
+func (s Set[T]) And(other Set[T]) Set[T] {
+	if other == nil {
+		return InitSet[T](nil)
+	}
+
+	return s.Intersection(other)
+}
+
 func (s Set[T]) Difference(other Set[T]) Set[T] {
 	if other == nil {
 		return InitSet[T](nil)
@@ -79,6 +87,14 @@ func (s Set[T]) Difference(other Set[T]) Set[T] {
 	}
 
 	return result
+}
+
+func (s Set[T]) Diff(other Set[T]) Set[T] {
+	if other == nil {
+		return InitSet[T](nil)
+	}
+
+	return s.Difference(other)
 }
 
 func (s Set[T]) Union(other Set[T]) Set[T] {
@@ -96,6 +112,14 @@ func (s Set[T]) Union(other Set[T]) Set[T] {
 	}
 
 	return result
+}
+
+func (s Set[T]) Or(other Set[T]) Set[T] {
+	if other == nil {
+		return InitSet[T](nil)
+	}
+
+	return s.Union(other)
 }
 
 func (s Set[T]) SymmetricDifference(other Set[T]) Set[T] {
@@ -119,10 +143,20 @@ func (s Set[T]) SymmetricDifference(other Set[T]) Set[T] {
 	return result
 }
 
+func (s Set[T]) Xor(other Set[T]) Set[T] {
+	if other == nil {
+		return InitSet[T](nil)
+	}
+
+	return s.SymmetricDifference(other)
+}
+
 func (s Set[T]) Print() {
+	fmt.Printf("Set {")
 	for k, _ := range s {
 		fmt.Printf("%v ", k)
 	}
+	fmt.Printf("}")
 }
 
 func (s Set[T]) IsDisjoint(other Set[T]) bool {
