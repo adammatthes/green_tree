@@ -80,3 +80,17 @@ if set1.Equals(set2) {
 	// perform logic
 }
 ```
+
+## Zip
+
+Emulates the behavior of Python's zip function. Usage:
+
+```go
+a := int[]{1, 2, 3, 4}
+b := int[]{5, 6, 7, 8}
+
+c, err := Zip(a, b)
+```
+
+If any of the provided slices are not of the same length, the resulting slice of slices will have the length of the shortest initial slice, and err will not be nil.
+
