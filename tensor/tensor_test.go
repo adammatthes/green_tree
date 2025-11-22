@@ -19,7 +19,8 @@ func TestInitTensor(t *testing.T) {
 }
 
 func TestLinearIndex(t *testing.T) {
-	testTensor, err := InitTensor[int, uint]([]uint{2, 2})
+
+	testTensor, err := InitTensor[int, uint]([]uint{5, 5})
 
 	offset, err := testTensor.LinearIndex([]uint{0, 0})
 	if err != nil {
@@ -35,7 +36,26 @@ func TestLinearIndex(t *testing.T) {
 		t.Errorf("Error getting offset: %v\n", err)
 	}
 
-	if offset != 3 {
+	if offset != 6 {
 		t.Errorf("Offset miscalculated: %v, expected 3\n", offset)
+	}
+
+	offset, err = testTensor.LinearIndex([]uint{4, 4})
+	if err != nil {
+		t.Errorf("Error getting offset: %v\n", err)
+	}
+
+	if offset != 24 {
+		t.Errorf("Offset miscalculated: %v, expected 24\n", offset)
+	}
+
+	offset, err = testTensor.LinearIndex([]uint{1, 1, 1})
+	if err == nil {
+		t.Errorf("Mismatched coordinate dimension not caught\n")
+	}
+
+	offset, err = testTensor.LinearIndex([]uint{3, 10})
+	if err == nil {
+		t.Errorf("Out of bounds coordinate value not caught\n")
 	}
 }
