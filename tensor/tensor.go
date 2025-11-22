@@ -66,3 +66,12 @@ func (t *Tensor[T, S]) LinearIndex(coord []S) (S, error) {
 
 	return offset, nil
 }
+
+func (t *Tensor[T, S]) Get(coord []S) (T, error) {
+	offset, err := t.LinearIndex(coord)
+	if err != nil {
+		return *new(T), errors.New(fmt.Sprintf("LinearIndex failed: %v", err))
+	}
+
+	return t.Data[offset], nil
+}

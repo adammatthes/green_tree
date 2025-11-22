@@ -37,7 +37,7 @@ func TestLinearIndex(t *testing.T) {
 	}
 
 	if offset != 6 {
-		t.Errorf("Offset miscalculated: %v, expected 3\n", offset)
+		t.Errorf("Offset miscalculated: %v, expected 6\n", offset)
 	}
 
 	offset, err = testTensor.LinearIndex([]uint{4, 4})
@@ -57,5 +57,33 @@ func TestLinearIndex(t *testing.T) {
 	offset, err = testTensor.LinearIndex([]uint{3, 10})
 	if err == nil {
 		t.Errorf("Out of bounds coordinate value not caught\n")
+	}
+}
+
+func TestGetMethod(t *testing.T) {
+	tt, err := InitTensor[int, uint]([]uint{5, 5})
+	if err != nil {
+		t.Errorf("Init Tensor failed: %v\n", err)
+	}
+
+	tt.Data[4] = 42 // artificially setting for test
+
+	val, err := tt.Get([]uint{0, 4})
+	if err != nil {
+		t.Errorf("Get method failed: %v\n", err)
+	}
+
+	if val != 42 {
+		t.Errorf("Did not Get expected value: %v != %v", val, 42)
+	}
+
+	val, err = tt.Get([]uint{10, 10})
+	if err == nil {
+		t.Errorf("Error not relayed from Linear Index in Get\n")
+	}
+
+	val, err = tt.Get([]uint{1, 1, 1})
+	if err == nil {
+		t.Errorf("Error not relayed from Linear Index in Get\n")
 	}
 }
