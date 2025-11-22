@@ -2,6 +2,7 @@ package tensor
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Numeric interface {
@@ -25,8 +26,7 @@ func InitTensor[T Numeric, S Index](shape []S) (*Tensor[T, S], error) {
 		return &Tensor[T, S]{}, errors.New("Invalid shape for Tensor")
 	}
 
-	var totalSize S;
-	totalSize += 1
+	var totalSize S = S(1);
 
 	for n := 0; n < len(shape); n++ {
 		totalSize *= shape[n]
@@ -35,10 +35,9 @@ func InitTensor[T Numeric, S Index](shape []S) (*Tensor[T, S], error) {
 	data := make([]T, totalSize)
 
 	strides := make([]S, len(shape))
-	var currentStride S;
-	currentStride += 1;
+	var currentStride S = S(1);
 
-	for n := len(shape); n >= 0; n-- {
+	for n := len(shape) - 1; n >= 0; n-- {
 		strides[n] = currentStride
 		currentStride *= shape[n]
 	}
@@ -49,4 +48,21 @@ func InitTensor[T Numeric, S Index](shape []S) (*Tensor[T, S], error) {
 		Data:		data}
 
 	return &result, nil
+}
+
+func (t *Tensor[T, S]) LinearIndex(coord []S) (S, error) {
+	if len(coord) != len(t.Shape) {
+		return 0, errors.New(fmt.Sprintf("Coordinate dimensions (%v) do not match shape (%v)\n", coord, t.Shape))
+	}
+
+	offset := S(0)
+
+	for n := 0; n < len(coord); n++ {
+		if coord[n] >= t.Shape[n] {
+			return 0, errors.New(fmt.Sprintf("Coordinate dimension (%v) exceeds bounds of shape (%v)\n", coord[n], t.Shape[n]))
+		}
+		offset += coord[n] * t.Strides[n]
+	}
+
+	return offset, nil
 }
