@@ -86,3 +86,47 @@ func (t *Tensor[T, S]) Set(coord []S, val T) error {
 
 	return nil
 }
+
+func (t *Tensor[T, S]) Transpose(axes ...S) (*Tensor[T, S], error) {
+	if len(axes) == 0 {
+		for n := len(t.Shape) - 1; n >= 0; n-- {
+			axes = append(axes, S(n))
+		}
+	}
+
+
+
+	if len(axes) != len(t.Shape) {
+		return &Tensor[T, S]{}, errors.New(
+			fmt.Sprintf("Number of axes does not match shape of Tensor: %v != %v", len(axes), len(t.Shape)))
+	}
+
+	newShape := make([]S, len(t.Shape))
+	newStride := make([]S, len(t.Strides))
+
+	for n := 0; n < len(axes); n++ {
+		newShape[n] = t.Shape[axes[n]]
+		newStride[n] = t.Strides[axes[n]]
+	}
+
+	result := Tensor[T, S] {
+		Shape:		newShape,
+		Strides:	newStride,
+		Data:		t.Data,
+	}
+
+	return &result, nil
+
+
+}
+
+/*
+
+Dot(other Tensor) Tensor (Matrix Multiplication)
+
+Inverse() Tensor (Matrix Inversion - required for Normal Equation)
+
+Subtract(other Tensor) Tensor (Required for Gradient Descent)
+
+MultiplyScalar(scalar float64) Tensor (Required for Gradient Descent)
+*/

@@ -120,3 +120,40 @@ func TestSetMethod(t *testing.T) {
 		t.Errorf("Error from Linear Index not relayed from Set\n")
 	}
 }
+
+func TestTranspose(t *testing.T) {
+	tt, err := InitTensor[int, uint]([]uint{2, 5})
+	if err != nil {
+		t.Errorf("Error InitTensor: %v\n", err)
+	}
+
+	if tt.Shape[0] != 2 || tt.Shape[1] != 5 {
+		t.Errorf("Shape values not initialized correctly\n")
+	}
+
+	tt2, err := tt.Transpose()
+	if err != nil {
+		t.Errorf("Error during default transposition: %v\n", err)
+	}
+
+	if tt2.Shape[0] != 5 || tt2.Shape[1] != 2 {
+		t.Errorf("Shape not transposed correctly on default transpose\n")
+	}
+
+	tt3, err := InitTensor[int, uint]([]uint{1, 2, 3, 4})
+	if err != nil {
+		t.Errorf("Error init with 4 dimensions: %v\n", err)
+	}
+
+	tt4, err := tt3.Transpose(1, 3, 2, 0)
+	if err != nil {
+		t.Errorf("Error transposing with custom axes: %v\n", err)
+	}
+
+	if tt4.Shape[0] != 2 || tt4.Shape[1] != 4 || tt4.Shape[2] != 3 || tt4.Shape[3] != 1 {
+		t.Errorf("Custom transpose incorrect. Got %v expected {2, 4, 3, 1}", tt4.Shape)
+	}
+
+
+
+}
