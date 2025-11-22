@@ -75,3 +75,14 @@ func (t *Tensor[T, S]) Get(coord []S) (T, error) {
 
 	return t.Data[offset], nil
 }
+
+func (t *Tensor[T, S]) Set(coord []S, val T) error {
+	offset, err := t.LinearIndex(coord)
+	if err != nil {
+		return err
+	}
+
+	t.Data[offset] = val
+
+	return nil
+}

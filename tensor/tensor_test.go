@@ -87,3 +87,36 @@ func TestGetMethod(t *testing.T) {
 		t.Errorf("Error not relayed from Linear Index in Get\n")
 	}
 }
+
+func TestSetMethod(t *testing.T) {
+	tt, err := InitTensor[int, uint]([]uint{5, 5})
+	if err != nil {
+		t.Errorf("Init Tensor failed: %v\n", err)
+	}
+
+	coord := []uint{0, 1}
+
+	err = tt.Set(coord, 42)
+	if err != nil {
+		t.Errorf("Set failed: %v\n", err)
+	}
+
+	val, err := tt.Get(coord)
+	if err != nil {
+		t.Errorf("Error during Get after Set: %v\n", err)
+	}
+
+	if val != 42 {
+		t.Errorf("Value was not Set correctly. Expected 42, got %v\n", val)
+	}
+
+	err = tt.Set([]uint{1, 1, 1}, 5)
+	if err == nil {
+		t.Errorf("Error from Linear Index not relayed from Set\n")
+	}
+
+	err = tt.Set([]uint{10, 10}, 5)
+	if err == nil {
+		t.Errorf("Error from Linear Index not relayed from Set\n")
+	}
+}
