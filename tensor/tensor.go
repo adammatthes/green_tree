@@ -120,6 +120,89 @@ func (t *Tensor[T, S]) Transpose(axes ...S) (*Tensor[T, S], error) {
 
 }
 
+func (t *Tensor[T, S]) Dot(other *Tensor[T, S]) (*Tensor[T, S], error) {
+	lenA := len(t.Shape)
+	lenB := len(other.Shape)
+
+	if lenA < 2 || lenB < 2 {
+		return &Tensor[T, S]{}, errors.New("Tensors must at least 2 dimensions for Dot product calculation")
+	}
+
+	batchSizeA := S(lenA - 2)
+	batchSizeB := S(lenB - 2)
+
+	if batchSizeA != batchSizeB {
+		return &Tensor[T, S]{}, errors.New("Batch dimensions do not match")
+	}
+
+	for n := S(0); n < batchSizeA; n++ {
+		if t.Shape[n] != other.Shape[n] {
+			return &Tensor[T, S]{}, errors.New("Shape in batch dimensions do not match") 
+		}
+	}
+
+	M := t.Shape[batchSizeA]
+	K1 := t.Shape[batchSizeA + 1]
+	K2 := other.Shape[batchSizeB]
+	N := other.Shape[batchSizeB + 1]
+
+	if K1 != K2 {
+		return &Tensor[T, S]{}, errors.New(fmt.Sprintf("Inner dimensions do not match. %v != %v", K1, K2))
+	}
+
+	K := K1
+
+	newShape := make([]S, lenA)
+	copy(newShape, t.Shape[:batchSizeA])
+	newShape[batchSizeA] = M
+	newShape[batchSizeA + 1] = N
+
+	result, err := InitTensor[T, S](newShape)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	totalMul := S(1)
+
+	for _, dim := range t.Shape[:batchSizeA] {
+		totalMul *= dim
+	}
+
+	strideMatrixA := t.Strides[batchSizeA]
+	strideMatrixB := other.Strides[batchSizeB]
+	strideMatrixResult := result.Strides[batchSizeA]
+
+	R := M
+	C := N
+	batchCount := totalMul
+
+	for batchIdx := S(0); batchIdx < batchCount; batchIdx++ {
+		batchOffsetA := batchIdx * strideMatrixA
+		batchOffsetB := batchIdx * strideMatrixB
+		batchOffsetResult := batchIdx * strideMatrixResult
+
+		for i := S(0); i < R; i++ {
+			for j := S(0); j < C; j++ {
+				sum := *new(T)
+
+				for k := S(0); k < K; k++ {
+					idxA := batchOffsetA + (i * t.Strides[batchSizeA]) + (k * t.Strides[batchSizeA + 1])
+					valA := t.Data[idxA]
+
+					idxB := batchOffsetB + (k * other.Strides[batchSizeB]) + (j * other.Strides[batchSizeB + 1])
+					valB := other.Data[idxB]
+
+					sum += valA * valB
+				}
+				idxResult := batchOffsetResult + (i * result.Strides[batchSizeA]) + (j * result.Strides[batchSizeA + 1])
+				result.Data[idxResult] = sum
+			}
+		}
+	}
+
+	return result, nil
+}
+
 /*
 
 Dot(other Tensor) Tensor (Matrix Multiplication)

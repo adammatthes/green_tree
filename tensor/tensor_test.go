@@ -154,6 +154,43 @@ func TestTranspose(t *testing.T) {
 		t.Errorf("Custom transpose incorrect. Got %v expected {2, 4, 3, 1}", tt4.Shape)
 	}
 
+}
 
+func TestDot(t *testing.T) {
+	tt1, _ := InitTensor[int, uint]([]uint{2, 2})
+	tt1.Set([]uint{0, 0}, 1)
+	tt1.Set([]uint{0, 1}, 2)
+	tt1.Set([]uint{1, 0}, 3)
+	tt1.Set([]uint{1, 1}, 4)
 
+	tt2, _ := InitTensor[int, uint]([]uint{2, 2})
+	tt2.Set([]uint{0, 0}, 5)
+	tt2.Set([]uint{0, 1}, 6)
+	tt2.Set([]uint{1, 0}, 7)
+	tt2.Set([]uint{1, 1}, 8)
+
+	result, err := tt1.Dot(tt2)
+	if err != nil {
+		t.Errorf("Error during 2x2 dot product")
+	}
+
+	val, _ := result.Get([]uint{0, 0})
+	if val != 19 {
+		t.Errorf("Unexpected value for Dot. Got %v, expected 19\n %v\n", val, result.Data)
+	}
+
+	val, _ = result.Get([]uint{0, 1})
+	if val != 22 {
+		t.Errorf("Unexpected value for Dot. Got %v, expected 22\n %v\n", val, result.Data)
+	}
+
+	val, _ = result.Get([]uint{1, 0})
+	if val != 43 {
+		t.Errorf("Unexpected value for Dot. Got %v, expected 43\n %v\n", val, result.Data)
+	}
+
+	val, _ = result.Get([]uint{1, 1})
+	if val != 50 {
+		t.Errorf("Unexpected value for Dot. Got %v, expected 50\n %v\n", val, result.Data)
+	}
 }
