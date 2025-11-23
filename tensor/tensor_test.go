@@ -194,3 +194,50 @@ func TestDot(t *testing.T) {
 		t.Errorf("Unexpected value for Dot. Got %v, expected 50\n %v\n", val, result.Data)
 	}
 }
+
+func TestDotAsymmetrical(t *testing.T) {
+	t1, _ := InitTensor[int, uint]([]uint{2, 3})
+	t1.Set([]uint{0, 0}, 1)
+	t1.Set([]uint{0, 1}, 2)
+	t1.Set([]uint{0, 2}, 3)
+	t1.Set([]uint{1, 0}, 4)
+	t1.Set([]uint{1, 1}, 5)
+	t1.Set([]uint{1, 2}, 6)
+	
+	t2, _ := InitTensor[int, uint]([]uint{3, 2})
+	t2.Set([]uint{0, 0}, 7)
+	t2.Set([]uint{0, 1}, 8)
+	t2.Set([]uint{1, 0}, 9)
+	t2.Set([]uint{1, 1}, 10)
+	t2.Set([]uint{2, 0}, 11)
+	t2.Set([]uint{2, 1}, 12)
+
+	result, err := t1.Dot(t2)
+	if err != nil {
+		t.Errorf("Error performing asymmetrical dot")
+	}
+
+	if result.Shape[0] != 2 || result.Shape[1] != 2 {
+		t.Errorf("Assymetrical dot product did not result in expected shape")
+	}
+
+	val, _ := result.Get([]uint{0, 0})
+	if val != 58 {
+		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 58\n %v\n", val, result.Data)
+	}
+
+	val, _ = result.Get([]uint{0, 1})
+	if val != 64 {
+		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 64\n %v\n", val, result.Data)
+	}
+
+	val, _ = result.Get([]uint{1, 0})
+	if val != 139 {
+		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 139\n %v\n", val, result.Data)
+	}
+
+	val, _ = result.Get([]uint{1, 1})
+	if val != 154 {
+		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 154\n %v\n", val, result.Data)
+	}
+}
