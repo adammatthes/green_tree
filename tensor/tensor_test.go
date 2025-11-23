@@ -2,6 +2,7 @@ package tensor
 
 import (
 	"testing"
+	"fmt"
 )
 
 func TestInitTensor(t *testing.T) {
@@ -239,5 +240,47 @@ func TestDotAsymmetrical(t *testing.T) {
 	val, _ = result.Get([]uint{1, 1})
 	if val != 154 {
 		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 154\n %v\n", val, result.Data)
+	}
+}
+
+func TestBDBatch(t *testing.T) {
+	t1, _ := InitTensor[int, uint]([]uint{2, 3, 2})
+	for n := 0; n < 6; n++ {
+		t1.Data[n] = 1
+	}
+
+	for n := 6; n < 12; n++ {
+		t1.Data[n] = 3
+	}
+
+	fmt.Printf("%v\n", t1.Data)
+
+	t2, _ := InitTensor[int, uint]([]uint{2, 2, 4})
+	for n := 0; n < 8; n++ {
+		t2.Data[n] = 2
+	}
+	for n := 8; n < 16; n++ {
+		t2.Data[n] = 4
+	}
+
+	fmt.Printf("%v\n", t2.Data)
+
+	result, err := t1.Dot(t2)
+	if err != nil {
+		t.Errorf("Error on BD Batch Dot: %v\n", err)
+	}
+
+	for n := uint(0); n < 12; n++ {
+		if result.Data[n] != 4 {
+			t.Errorf("Unexpected result in BD Batch dot: %v\n", result.Data)
+			break
+		}
+	}
+
+	for n := uint(12); n < 24; n++ {
+		if result.Data[n] != 24 {
+			t.Errorf("Unexpected result in BD Batch dot: %v\n", result.Data)
+			break
+		}
 	}
 }

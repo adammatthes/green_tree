@@ -146,6 +146,9 @@ func (t *Tensor[T, S]) Dot(other *Tensor[T, S]) (*Tensor[T, S], error) {
 	K2 := other.Shape[batchSizeB]
 	N := other.Shape[batchSizeB + 1]
 
+	totalMatrixSizeA := M * K1
+	totalMatrixSizeB := K2 * N
+
 	if K1 != K2 {
 		return &Tensor[T, S]{}, errors.New(fmt.Sprintf("Inner dimensions do not match. %v != %v", K1, K2))
 	}
@@ -168,18 +171,17 @@ func (t *Tensor[T, S]) Dot(other *Tensor[T, S]) (*Tensor[T, S], error) {
 		totalMul *= dim
 	}
 
-	strideMatrixA := t.Strides[batchSizeA]
-	strideMatrixB := other.Strides[batchSizeB]
-	strideMatrixResult := result.Strides[batchSizeA]
 
 	R := M
 	C := N
 	batchCount := totalMul
 
 	for batchIdx := S(0); batchIdx < batchCount; batchIdx++ {
-		batchOffsetA := batchIdx * strideMatrixA
-		batchOffsetB := batchIdx * strideMatrixB
-		batchOffsetResult := batchIdx * strideMatrixResult
+		batchOffsetA := batchIdx * totalMatrixSizeA
+		batchOffsetB := batchIdx * totalMatrixSizeB
+
+		totalMatrixSizeResult := M * N
+		batchOffsetResult := batchIdx * totalMatrixSizeResult
 
 		for i := S(0); i < R; i++ {
 			for j := S(0); j < C; j++ {
