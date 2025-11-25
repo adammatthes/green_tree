@@ -206,6 +206,33 @@ func (t *Tensor[T, S]) Dot(other *Tensor[T, S]) (*Tensor[T, S], error) {
 	return result, nil
 }
 
+func (t *Tensor[T, S]) Add(other *Tensor[T, S]) (*Tensor[T, S], error) {
+	if len(t.Shape) != len(other.Shape) {
+		return &Tensor[T, S]{}, errors.New("Number of dimensions do not match")
+	}
+
+	for n := S(0); n < S(len(t.Shape)); n++ {
+		if t.Shape[n] != other.Shape[n] {
+			return &Tensor[T, S]{}, errors.New("Length of dimension does not match")
+		}
+	}
+
+	if len(t.Data) != len(other.Data) {
+		return &Tensor[T, S]{}, errors.New("Total length of Tensors do not match")
+	}
+
+	result, err := InitTensor[T, S](t.Shape)
+	if err != nil {
+		return &Tensor[T, S]{}, errors.New("Error creating new Tensor before addition")
+	}
+
+	for n := S(0); n < S(len(result.Data)); n++ {
+		result.Data[n] = t.Data[n] + other.Data[n]
+	}
+
+	return result, nil
+}
+
 func (t *Tensor[T, S]) Subtract(other *Tensor[T, S]) (*Tensor[T, S], error) {
 	if len(t.Shape) != len(other.Shape) {
 		return &Tensor[T, S]{}, errors.New("Number of dimensions do not match")

@@ -358,3 +358,32 @@ func TestMultiplyScalar(t *testing.T) {
 		}
 	}
 }
+
+func TestAddTensor(t *testing.T) {
+	t1, err := InitTensor[int, uint]([]uint{2, 2})
+	if err != nil {
+		t.Errorf("Failed init during Add test")
+	}
+
+	for n := 0; n < len(t1.Data); n++ {
+		t1.Data[n] = 1
+	}
+
+	t2, _ := InitTensor[int, uint]([]uint{2, 2})
+
+	for n := 0; n < len(t2.Data); n++ {
+		t2.Data[n] = 2
+	}
+
+	result, err := t1.Add(t2)
+	if err != nil {
+		t.Errorf("Error during addition of Tensors")
+	}
+
+	for n := 0; n < len(result.Data); n++ {
+		if result.Data[n] != 3 {
+			t.Errorf("Unexpected value after Tensor addition: %v != %v", result.Data[n], 3)
+		}
+	}
+
+}
