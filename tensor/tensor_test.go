@@ -3,6 +3,7 @@ package tensor
 import (
 	"testing"
 	"fmt"
+	"math"
 )
 
 func TestInitTensor(t *testing.T) {
@@ -281,6 +282,79 @@ func TestBDBatch(t *testing.T) {
 		if result.Data[n] != 24 {
 			t.Errorf("Unexpected result in BD Batch dot: %v\n", result.Data)
 			break
+		}
+	}
+}
+
+func TestSubtract(t *testing.T) {
+	t1, err := InitTensor[int, uint]([]uint{3, 3, 3})
+	if err != nil {
+		t.Errorf("InitTensor Failed in Subtract Test")
+	}
+
+	for n := 0; n < len(t1.Data); n++ {
+		t1.Data[n] = 3
+	}
+
+	t2, _ := InitTensor[int, uint]([]uint{3, 3, 3})
+
+	for n := 0; n < len(t2.Data); n++ {
+		t2.Data[n] = 2
+	}
+
+	result, err := t1.Subtract(t2)
+	if err != nil {
+		t.Errorf("Tensor subtraction failed")
+	}
+
+	for n := 0; n < len(result.Data); n++ {
+		if result.Data[n] != 1 {
+			t.Errorf("Unexpected Value in Subtraction result: %v != %v", result.Data[n], 1)
+		}
+	}
+}
+
+func TestValidTensor(t *testing.T) {
+	tt, err := InitTensor[float64, uint]([]uint{2, 2})
+	if err != nil {
+		t.Errorf("Failed to init Tensor during Valid test")
+	}
+
+	for n := 0; n < len(tt.Data); n++ {
+		tt.Data[n] = math.MaxFloat64
+	}
+
+	if !tt.Valid() {
+		t.Errorf("False negative in validating Tensor values")
+	}
+
+	for n := 0; n < len(tt.Data); n++ {
+		tt.Data[n] *= 2
+	}
+
+	if tt.Valid() {
+		t.Errorf("False positive in validating Tensor values")
+	}
+}
+
+func TestMultiplyScalar(t *testing.T) {
+	t1, err := InitTensor[int, uint]([]uint{2, 2})
+	if err != nil {
+		t.Errorf("Failed init before scalar multiply")
+	}
+
+	for n := 0; n < len(t1.Data); n++ {
+		t1.Data[n] = 2
+	}
+
+	t2, err := t1.MulScalar(2)
+	if err != nil {
+		t.Errorf("Error occurred during scalar multiply")
+	}
+
+	for n := 0; n < len(t2.Data); n++ {
+		if t2.Data[n] != 4 {
+			t.Errorf("Unexpected value in scalar multiply: %v != %v", t2.Data[n], 4)
 		}
 	}
 }
