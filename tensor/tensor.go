@@ -289,6 +289,33 @@ func (t *Tensor[T, S]) MulScalar(scalar T) (*Tensor[T, S], error) {
 	return result, nil
 }
 
+func (t *Tensor[T, S]) Hadamard(other *Tensor[T, S]) (*Tensor[T, S], error) {
+	if len(t.Shape) != len(other.Shape) {
+		return &Tensor[T, S]{}, errors.New("Tensors must have same number of dimensions")
+	}
+
+	for n := S(0); n < S(len(t.Shape)); n++ {
+		if t.Shape[n] != other.Shape[n] {
+			return &Tensor[T, S]{}, errors.New("Dimensions of Tensors must be same length")
+		}
+	}
+
+	if len(t.Data) != len(other.Data) {
+		return &Tensor[T, S]{}, errors.New("Total length of Tensors does not match")
+	}
+
+	result, err := InitTensor[T, S](t.Shape)
+	if err != nil {
+		return &Tensor[T, S]{}, errors.New("Init of new Tensor failed during Hadamard")
+	}
+
+	for n := S(0); n < S(len(result.Data)); n++ {
+		result.Data[n] = t.Data[n] * other.Data[n]
+	}
+
+	return result, nil
+}
+
 /*
 
 Inverse() Tensor (Matrix Inversion - required for Normal Equation)

@@ -387,3 +387,31 @@ func TestAddTensor(t *testing.T) {
 	}
 
 }
+
+func TestHadamard(t *testing.T) {
+	t1, err := InitTensor[int, uint]([]uint{2, 2})
+	if err != nil {
+		t.Errorf("Failed init during Hadamard test")
+	}
+
+	for n := 0; n < len(t1.Data); n++ {
+		t1.Data[n] = 2
+	}
+
+	t2, _ := InitTensor[int, uint]([]uint{2, 2})
+
+	for n := 0; n < len(t2.Data); n++ {
+		t2.Data[n] = 3
+	}
+
+	result, err := t1.Hadamard(t2)
+	if err != nil {
+		t.Errorf("Hadamard method failed")
+	}
+
+	for n := 0; n < len(result.Data); n++ {
+		if result.Data[n] != 6 {
+			t.Errorf("Unexpected value during Hadamard: %v != %v", result.Data[n], 6)
+		}
+	}
+}
