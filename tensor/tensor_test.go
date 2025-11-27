@@ -439,12 +439,38 @@ func TestAugmentBias(t *testing.T) {
 func TestRandomTensor(t *testing.T) {
 	t1, err := InitRandomTensor[float64, uint]([]uint{100, 100}, 100.0)
 	if err != nil {
-		t.Errorf("Failed to create a random tensor")
+		t.Errorf("Failed to create a random tensor: %v\n", err)
 	}
 
 	for n := 0; n < len(t1.Data); n++ {
 		if t1.Data[n] > 100.0 || t1.Data[n] < -100.0 {
 			t.Errorf("Value out of range of random tensor: %v", t1.Data[n])
 		}
+	}
+}
+
+func TestTargetTensor(t *testing.T) {
+	t1, err := InitTensor[float64, uint]([]uint{3, 2})
+	if err != nil {
+		t.Errorf("Error creating tensor before target tensor: %v\n", err)
+	}
+
+	t1.Data = []float64{10.0, 2.0, 5.0, 4.0, 1.0, 6.0}
+
+	t2, err := InitTargetTensor[float64, uint](t1, []float64{10.0, 2.0, -0.5})
+	if err != nil {
+		t.Errorf("Error creating target tensor: %v\n", err)
+	}
+
+	if t2.Shape[0] != 3 || t2.Shape[1] != 1 {
+		t.Errorf("Target tensor does not have expected shape: %v\n", t2.Shape)
+	}
+
+	if len(t2.Data) != 3 {
+		t.Errorf("Flat array of target tensor did not have expected length")
+	}
+
+	if t2.Data[0] < 28.0 || t2.Data[0] > 29.9 || t2.Data[1] < 17.0 || t2.Data[1] > 18.9 || t2.Data[2] < 8.0 || t2.Data[2] > 9.9 {
+		t.Errorf("Unexpected values in target tensor: %v\n", t2.Data)
 	}
 }

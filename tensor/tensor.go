@@ -58,7 +58,7 @@ func InitRandomTensor[T Numeric, S Index](shape []S, maxVal T) (*Tensor[T, S], e
 		return &Tensor[T, S]{}, nil
 	}
 
-	rangeWidth := 2.0 * float64(maxVal)
+	rangeWidth := 1.25 * float64(maxVal)
 	offset := float64(maxVal)
 
 	for n := range t.Data {
@@ -68,6 +68,42 @@ func InitRandomTensor[T Numeric, S Index](shape []S, maxVal T) (*Tensor[T, S], e
 	}
 
 	return t, nil
+}
+
+func InitTargetTensor[T Numeric, S Index](
+	xBase *Tensor[T, S],
+	weights []T) (*Tensor[T, S], error) {
+	if len(xBase.Shape) != 2 {
+		return &Tensor[T, S]{}, errors.New("Target Tensor creation requires a 2D tensor")
+	}
+
+	numSamples := xBase.Shape[0]
+
+	y, err := InitTensor[T, S]([]S{numSamples, 1})
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	bias := T(weights[0])
+	w1 := T(weights[1])
+	w2 := T(weights[2])
+
+	rowStride := xBase.Strides[0]
+
+	for n := S(0); n < numSamples; n++ {
+		startIdx := n * rowStride
+
+		x1 := xBase.Data[startIdx]
+		x2 := xBase.Data[startIdx + 1]
+
+		noise := T(rand.Float64() * 2 - 1.0)
+
+		yN := bias + (w1 * x1) + (w2 * x2) + noise
+
+		y.Data[n] = yN
+	}
+
+	return y, nil
 }
 
 func (t *Tensor[T, S]) LinearIndex(coord []S) (S, error) {

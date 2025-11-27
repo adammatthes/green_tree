@@ -3,6 +3,7 @@ package tensor
 import (
 	"testing"
 	"math/rand"
+	"math"
 )
 
 func targetOutput(x1, x2 float64) float64 {
@@ -10,7 +11,7 @@ func targetOutput(x1, x2 float64) float64 {
 }
 
 func TestInitLinearRegressionModel(t *testing.T) {
-	lrm, err := InitLinearRegressionModel(uint(10), 0.05, uint(100))
+	lrm, err := InitLinearRegressionModel(uint(10), 0.05, 0.9, uint(100))
 	if err != nil {
 		t.Errorf("Failed to init Linear Regression Model")
 	}
@@ -33,39 +34,59 @@ func TestInitLinearRegressionModel(t *testing.T) {
 }
 
 func TestFitLinearRegressionModel(t *testing.T) {
-	features, err := InitTensor[float64, uint]([]uint{100, 3})
+	numSamples := uint(1000)
+	learningRate := 0.0000001
+	momentum := 0.9
+	maxIterations := uint(20000)
+
+	expectedWeights := []float64{10.0, 5.0, -2.0}
+
+	xBase, _ := InitRandomTensor([]uint{numSamples, 2}, 10.0)
+
+	y, err := InitTargetTensor[float64, uint](xBase, expectedWeights)
 	if err != nil {
-		t.Errorf("Failed to create features tensor during Fit test: %v\n", err)
+		t.Errorf("Failed to init target tensor in Fit test")
 	}
 
-	for n := uint(0); n < features.Shape[0]; n++ {
-		features.Set([]uint{n, 0}, 1.0)
-		features.Set([]uint{n, 1}, rand.Float64() * 10.0 - 9.0)
-		features.Set([]uint{n, 2}, rand.Float64() * 10.0 - 9.0)
-	}
-
-	targets, err := InitTensor[float64, uint]([]uint{100, 1})
+	xAug, err := xBase.AugmentBias()
 	if err != nil {
-		t.Errorf("Failed to create targets during Fit test: %v\n", err)
+		t.Errorf("AugmentBias failed in Fit test: %v\n", err)
 	}
 
-	for n := uint(0); n < features.Shape[0]; n++ {
-		x1, _ := features.Get([]uint{n, 1})
-		x2, _ := features.Get([]uint{n, 2})
-		targets.Data[n] = targetOutput(x1, x2)
+	if xAug.Data[0] != 1.0 {
+		t.Errorf("Unexpected Value from AugmentBias: %v\n", xAug.Data[0])
 	}
 
-	lrm, err := InitLinearRegressionModel(uint(3), 0.01, uint(5000))
+	numFeatures := xAug.Shape[1]
+	lrm, err := InitLinearRegressionModel[float64, uint](numFeatures, learningRate, momentum, maxIterations)
 	if err != nil {
-		t.Errorf("Failed to init Linear Regression Model during Fit test: %v\n", err)
+		t.Errorf("Regression model init failed in Fit test: %v\n", err)
 	}
 
-	err = lrm.Fit(features, targets)
+	err = lrm.Fit(xAug, y)
 	if err != nil {
-		t.Errorf("Error during Fit method: %v\n", err)
+		t.Errorf("Fit failed: %v\n", err)
 	}
 
-	if lrm.Weights.Data[0] < 9.9 || lrm.Weights.Data[0] > 10.1 || lrm.Weights.Data[1] < 4.9 || lrm.Weights.Data[1] > 5.1 || lrm.Weights.Data[2] < -2.1 || lrm.Weights.Data[2] > -1.9 {
-		t.Errorf("Values don't match expected model")
+	epsilon := 0.05
+
+	learnedWeights := lrm.Weights.Data
+
+	if len(learnedWeights) != len(expectedWeights) {
+		t.Errorf("Mismatch of expected weights: got %v, want %v\n", len(learnedWeights), len(expectedWeights))
+	}
+
+	for n, expected := range expectedWeights {
+		actual := learnedWeights[n]
+
+		diff := math.Abs(actual - expected)
+
+		if diff > epsilon {
+			t.Errorf("Weight failed convergence. Expected %v, got %v\n", expected, actual)
+		}
+	}
+
+	if !lrm.Weights.Valid() {
+		t.Errorf("Model contains invalid weights, i.e., NaN, Inf: %v\n", lrm.Weights)
 	}
 }
