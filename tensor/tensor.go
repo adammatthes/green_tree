@@ -316,6 +316,40 @@ func (t *Tensor[T, S]) Hadamard(other *Tensor[T, S]) (*Tensor[T, S], error) {
 	return result, nil
 }
 
+func (t *Tensor[T, S]) AugmentBias() (*Tensor[T, S], error) {
+	if len(t.Shape) != 2 {
+		return &Tensor[T, S]{}, errors.New("Can only augment a two dimensional tensor")
+	}
+
+	numSamples := t.Shape[0]
+	numFeatures := t.Shape[1]
+
+	newShape := []S{numSamples, numFeatures + 1}
+
+	result, err := InitTensor[T, S](newShape)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	resultRowStride := result.Strides[0]
+
+	for n := S(0); n < numSamples; n++ {
+		biasIndex := n * resultRowStride
+		result.Data[biasIndex] = T(1.0)
+
+		resultFeatureStart := biasIndex + 1
+
+		originalFeatureStart := n * t.Strides[0]
+
+		copy(
+			result.Data[resultFeatureStart: resultFeatureStart + numFeatures],
+			t.Data[originalFeatureStart: originalFeatureStart + numFeatures],
+		)
+	}
+
+	return result, nil
+}
+
 /*
 
 Inverse() Tensor (Matrix Inversion - required for Normal Equation)

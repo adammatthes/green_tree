@@ -415,3 +415,23 @@ func TestHadamard(t *testing.T) {
 		}
 	}
 }
+
+func TestAugmentBias(t *testing.T) {
+	t1, err := InitTensor[float64, uint]([]uint{2, 2})
+	if err != nil {
+		t.Errorf("Failed to init tensor in Augment Bias Test: %v\n", err)
+	}
+
+	for n := 0; n < len(t1.Data); n++ {
+		t1.Data[n] = 5.0
+	}
+
+	result, err := t1.AugmentBias()
+	if err != nil {
+		t.Errorf("Problem Augmenting Bias: %v\n", err)
+	}
+
+	if result.Data[0] > 1.05 {
+		t.Errorf("Augmentation unsuccessful. Expected value near 1.0, got %v\n", result.Data[0])
+	}
+}
