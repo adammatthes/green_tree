@@ -40,3 +40,41 @@ func InitLinearRegressionModel[T Numeric, S Index](
 
 	return &model, nil
 }
+
+func (lrm *LinearRegressionModel[T, S]) Fit(X *Tensor[T, S], Y *Tensor[T, S]) error {
+	X_T, err := X.Transpose()
+	if err != nil {
+		return err
+	}
+
+	for n := S(0); n < lrm.MaxIterations; n++ {
+		predictions, err := X.Dot(lrm.Weights)
+		if err != nil {
+			return err
+		}
+
+		errorVector, err := predictions.Subtract(Y)
+		if err != nil {
+			return err
+		}
+
+		gradient, err := X_T.Dot(errorVector)
+		if err != nil {
+			return err
+		}
+
+		adjustment, err := gradient.MulScalar(lrm.LearningRate)
+		if err != nil {
+			return err
+		}
+
+		newWeights, err := lrm.Weights.Subtract(adjustment)
+		if err != nil {
+			return err
+		}
+
+		lrm.Weights = newWeights
+	}
+
+	return nil
+}
