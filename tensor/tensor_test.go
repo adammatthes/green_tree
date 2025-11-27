@@ -435,3 +435,16 @@ func TestAugmentBias(t *testing.T) {
 		t.Errorf("Augmentation unsuccessful. Expected value near 1.0, got %v\n", result.Data[0])
 	}
 }
+
+func TestRandomTensor(t *testing.T) {
+	t1, err := InitRandomTensor[float64, uint]([]uint{100, 100}, 100.0)
+	if err != nil {
+		t.Errorf("Failed to create a random tensor")
+	}
+
+	for n := 0; n < len(t1.Data); n++ {
+		if t1.Data[n] > 100.0 || t1.Data[n] < -100.0 {
+			t.Errorf("Value out of range of random tensor: %v", t1.Data[n])
+		}
+	}
+}

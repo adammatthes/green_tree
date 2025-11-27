@@ -3,6 +3,7 @@ package tensor
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"math"
 )
 
@@ -49,6 +50,24 @@ func InitTensor[T Numeric, S Index](shape []S) (*Tensor[T, S], error) {
 		Data:		data}
 
 	return &result, nil
+}
+
+func InitRandomTensor[T Numeric, S Index](shape []S, maxVal T) (*Tensor[T, S], error) {
+	t, err := InitTensor[T, S](shape)
+	if err != nil {
+		return &Tensor[T, S]{}, nil
+	}
+
+	rangeWidth := 2.0 * float64(maxVal)
+	offset := float64(maxVal)
+
+	for n := range t.Data {
+		randomVal := (rand.Float64() * rangeWidth) - offset
+
+		t.Data[n] = T(randomVal)
+	}
+
+	return t, nil
 }
 
 func (t *Tensor[T, S]) LinearIndex(coord []S) (S, error) {
