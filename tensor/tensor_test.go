@@ -519,3 +519,14 @@ func TestR2Score(t *testing.T) {
 		t.Errorf("Unexpected value for worst prediction. Got %v, expected 0.0", r2Score)
 	}
 }
+
+func TestInit64(t *testing.T) {
+	t64, err := InitTensor64(2, 2)
+	if err != nil {
+		t.Errorf("InitTensor64 failed: %v", err)
+	}
+
+	if len(t64.Data) != 4 {
+		t.Errorf("Unexpected Length of Tensor64: %v", len(t64.Data))
+	}
+}

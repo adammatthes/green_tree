@@ -52,6 +52,11 @@ func InitTensor[T Numeric, S Index](shape []S) (*Tensor[T, S], error) {
 	return &result, nil
 }
 
+func InitTensor64(shape ...uint64) (*Tensor[float64, uint64], error) {
+	result, err := InitTensor[float64, uint64](shape)
+	return result, err
+}
+
 func InitRandomTensor[T Numeric, S Index](shape []S, maxVal T) (*Tensor[T, S], error) {
 	t, err := InitTensor[T, S](shape)
 	if err != nil {
