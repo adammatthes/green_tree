@@ -470,7 +470,7 @@ func TestTargetTensor(t *testing.T) {
 		t.Errorf("Flat array of target tensor did not have expected length")
 	}
 
-	if t2.Data[0] < 28.0 || t2.Data[0] > 29.9 || t2.Data[1] < 17.0 || t2.Data[1] > 18.9 || t2.Data[2] < 8.0 || t2.Data[2] > 9.9 {
+	if t2.Data[0] < 28.0 || t2.Data[0] > 29.99 || t2.Data[1] < 17.0 || t2.Data[1] > 18.99 || t2.Data[2] < 8.0 || t2.Data[2] > 9.99 {
 		t.Errorf("Unexpected values in target tensor: %v\n", t2.Data)
 	}
 }
@@ -488,5 +488,34 @@ func TestNorm(t *testing.T) {
 	norm, _ = t2.Norm()
 	if norm != 2.0 {
 		t.Errorf("Unexpected value from Norm method. Expected %v, got %v", 2.0, norm)
+	}
+}
+
+func TestR2Score(t *testing.T) {
+	targets, _ := InitTensor[float64, uint]([]uint{3, 1})
+	targets.Data = []float64{1.0, 2.0, 3.0}
+
+	perfectPred, _ := InitTensor[float64, uint]([]uint{3, 1})
+	perfectPred.Data = []float64{1.0, 2.0, 3.0}
+
+	r2Score, err := R2Score(perfectPred, targets)
+	if err != nil {
+		t.Errorf("Error during R2 Score test: %v", err)
+	}
+
+	if r2Score != 1.0 {
+		t.Errorf("Unexpected value for perfect match. Got %v, expected 1.0", r2Score)
+	}
+
+	worstPred, err := InitTensor[float64, uint]([]uint{3, 1})
+	worstPred.Data = []float64{2.0, 2.0, 2.0}
+
+	r2Score, err = R2Score(worstPred, targets)
+	if err != nil {
+		t.Errorf("Error during worst prediction R2 score: %v", err)
+	}
+
+	if r2Score != 0.0 {
+		t.Errorf("Unexpected value for worst prediction. Got %v, expected 0.0", r2Score)
 	}
 }

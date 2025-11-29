@@ -419,6 +419,63 @@ func (t *Tensor[T, S]) Norm() (T, error) {
 	return T(math.Sqrt(sumOfSquares)), nil
 }
 
+func (t *Tensor[T, S]) Mean() (T, error) {
+	numElements := len(t.Data)
+	if numElements == 0 {
+		return T(0), nil
+	}
+
+	var sum float64
+	for _, val := range t.Data {
+		sum += float64(val)
+	}
+
+	return T(sum / float64(numElements)), nil
+}
+
+func R2Score[T Numeric, S Index](
+	predictions *Tensor[T, S],
+	targets *Tensor[T, S]) (T, error) {
+
+	yMean, err := targets.Mean()
+	if err != nil {
+		return T(0), fmt.Errorf("Mean error during R2 function: %v", err)
+	}
+
+	residuals, err := targets.Subtract(predictions)
+	if err != nil {
+		return T(0), fmt.Errorf("Tensor subtraction failed during R2 score: %v", err)
+	}
+
+	residualsNorm, _ := residuals.Norm()
+	sse := float64(residualsNorm * residualsNorm)
+
+	meanTensor, err := InitTensor[T, S](targets.Shape)
+	if err != nil {
+		return T(0), err
+	}
+
+	for n := range meanTensor.Data {
+		meanTensor.Data[n] = yMean
+	}
+
+	deviations, err := targets.Subtract(meanTensor)
+	if err != nil {
+		return T(0), fmt.Errorf("Error calculating deviations for R2 score: %v", err)
+	}
+
+	deviationsNorm, _ := deviations.Norm()
+	sst := float64(deviationsNorm * deviationsNorm)
+
+	if sst == 0 {
+		return T(1.0), nil
+	}
+
+	r2 := 1.0 - (sse / sst)
+
+	return T(r2), nil
+}
+
 /*
 
 Inverse() Tensor (Matrix Inversion - required for Normal Equation)
