@@ -11,7 +11,7 @@ func targetOutput(x1, x2 float64) float64 {
 }
 
 func TestInitLinearRegressionModel(t *testing.T) {
-	lrm, err := InitLinearRegressionModel(uint(10), 0.05, 0.9, uint(100))
+	lrm, err := InitLinearRegressionModel(uint(10), 0.05, 0.9, 5.0, uint(100))
 	if err != nil {
 		t.Errorf("Failed to init Linear Regression Model")
 	}
@@ -35,9 +35,10 @@ func TestInitLinearRegressionModel(t *testing.T) {
 
 func TestFitLinearRegressionModel(t *testing.T) {
 	numSamples := uint(1000)
-	learningRate := 0.0000001
+	learningRate := 0.00001
 	momentum := 0.9
-	maxIterations := uint(20000)
+	threshold := 5.0
+	maxIterations := uint(50000)
 
 	expectedWeights := []float64{10.0, 5.0, -2.0}
 
@@ -58,7 +59,8 @@ func TestFitLinearRegressionModel(t *testing.T) {
 	}
 
 	numFeatures := xAug.Shape[1]
-	lrm, err := InitLinearRegressionModel[float64, uint](numFeatures, learningRate, momentum, maxIterations)
+	lrm, err := InitLinearRegressionModel[float64, uint](
+		numFeatures, learningRate, momentum, threshold, maxIterations)
 	if err != nil {
 		t.Errorf("Regression model init failed in Fit test: %v\n", err)
 	}
@@ -88,5 +90,59 @@ func TestFitLinearRegressionModel(t *testing.T) {
 
 	if !lrm.Weights.Valid() {
 		t.Errorf("Model contains invalid weights, i.e., NaN, Inf: %v\n", lrm.Weights)
+	}
+}
+
+func TestPredict(t *testing.T) {
+	numSamples := uint(1000)
+	learningRate := 0.0001
+	momentum := 0.95
+	threshold := 5.0
+	maxIterations := uint(100000)
+
+	expectedWeights := []float64{10.0, 5.0, -2.0}
+
+	xBase, _ := InitRandomTensor[float64, uint]([]uint{numSamples, 2}, 10.0)
+	yTargets, _ := InitTargetTensor[float64, uint](xBase, expectedWeights)
+
+	xAug, _ := xBase.AugmentBias()
+
+	lrm, _ := InitLinearRegressionModel[float64, uint](
+		xAug.Shape[1], learningRate, momentum, threshold, maxIterations)
+
+	err := lrm.Fit(xAug, yTargets)
+	if err != nil {
+		t.Errorf("Failed to fit model during Predict test: %v", err)
+	}
+
+	predictions, err := lrm.Predict(xBase)
+	if err != nil {
+		t.Errorf("Predict method failed: %v", err)
+	}
+
+	if predictions.Shape[0] != numSamples || predictions.Shape[1] != 1 {
+		t.Errorf("Unexpected Predict output shape. Got %v, expected [%d, 1]", predictions.Shape, numSamples)
+	}
+
+	epsilon := 1.1
+
+	numFailed := 0.0
+	diffSum := 0.0
+
+	for n := uint(0); n < numSamples; n++ {
+		actual := yTargets.Data[n]
+		predicted := predictions.Data[n]
+
+		diff := math.Abs(float64(actual - predicted))
+
+		if diff > epsilon {
+			//t.Errorf("Prediction failed at sample %v. Predicted %v, Actual %v", n, predicted, actual)
+			numFailed += 1
+			diffSum += diff
+		}
+	}
+
+	if numFailed > 0 {
+		t.Errorf("Average diff of expected versus actual: %v", diffSum / numFailed)
 	}
 }

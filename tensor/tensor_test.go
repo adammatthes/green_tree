@@ -474,3 +474,19 @@ func TestTargetTensor(t *testing.T) {
 		t.Errorf("Unexpected values in target tensor: %v\n", t2.Data)
 	}
 }
+
+func TestNorm(t *testing.T) {
+	t1, _ := InitTensor[float64, uint]([]uint{0, 0})
+	norm, err := t1.Norm()
+	if norm != 0 || err != nil {
+		t.Errorf("Unexpected norm value from empty tensor: %v, %v", norm, err)
+	}
+
+	t2, _ := InitTensor[float64, uint]([]uint{2, 2})
+	t2.Data = []float64{1, 1, 1, 1}
+
+	norm, _ = t2.Norm()
+	if norm != 2.0 {
+		t.Errorf("Unexpected value from Norm method. Expected %v, got %v", 2.0, norm)
+	}
+}

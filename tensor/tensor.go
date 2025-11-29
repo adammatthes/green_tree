@@ -58,7 +58,7 @@ func InitRandomTensor[T Numeric, S Index](shape []S, maxVal T) (*Tensor[T, S], e
 		return &Tensor[T, S]{}, nil
 	}
 
-	rangeWidth := 1.25 * float64(maxVal)
+	rangeWidth := 2 * float64(maxVal)
 	offset := float64(maxVal)
 
 	for n := range t.Data {
@@ -403,6 +403,20 @@ func (t *Tensor[T, S]) AugmentBias() (*Tensor[T, S], error) {
 	}
 
 	return result, nil
+}
+
+func (t *Tensor[T, S]) Norm() (T, error) {
+	if len(t.Data) == 0 {
+		return T(0), nil
+	}
+
+	var sumOfSquares float64
+	for _, val := range t.Data {
+		v := float64(val)
+		sumOfSquares += v * v
+	}
+
+	return T(math.Sqrt(sumOfSquares)), nil
 }
 
 /*
