@@ -168,3 +168,34 @@ func (lrm *LinearRegressionModel[T, S]) Predict(xNew *Tensor[T, S]) (*Tensor[T, 
 
 	return predictions, nil
 }
+
+func RootMeanSquareError[T Numeric, S Index](
+	predictions *Tensor[T, S],
+	targets *Tensor[T, S]) (T, error) {
+
+	if len(predictions.Data) != len(targets.Data) {
+		return T(0), errors.New("RMSE Error: predictions and targets must have same length")
+	}
+
+	numSamples := float64(len(predictions.Data))
+	if numSamples == 0 {
+		return T(0), nil
+	}
+
+	residuals, err := predictions.Subtract(targets)
+	if err != nil {
+		return T(0), fmt.Errorf("RMSE Error during subtraction: %v", err)
+	}
+
+	norm, err := residuals.Norm()
+	if err != nil {
+		return T(0), fmt.Errorf("Norm error during RMSE: %v", err)
+	}
+
+	sumSquareErr := float64(norm * norm)
+
+	meanSquareErr := sumSquareErr / numSamples
+	rootMeanSquareErr := math.Sqrt(meanSquareErr)
+
+	return T(rootMeanSquareErr), nil
+}

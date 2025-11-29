@@ -124,6 +124,17 @@ func TestPredict(t *testing.T) {
 		t.Errorf("Unexpected Predict output shape. Got %v, expected [%d, 1]", predictions.Shape, numSamples)
 	}
 
+	rmse, err := RootMeanSquareError(predictions, yTargets)
+	if err != nil {
+		t.Errorf("RMSE error: %v", err)
+	}
+
+	noiseFloor := 0.6
+
+	if float64(rmse) > noiseFloor {
+		t.Errorf("RMSE higher than expected. Got %.4f, expected below %.2f", rmse, noiseFloor)
+	}
+
 	epsilon := 1.1
 
 	numFailed := 0.0
@@ -144,5 +155,33 @@ func TestPredict(t *testing.T) {
 
 	if numFailed > 0 {
 		t.Errorf("Average diff of expected versus actual: %v", diffSum / numFailed)
+	}
+}
+
+func TestRMSE(t *testing.T) {
+	predictions := &Tensor[float64, uint]{
+		Data: []float64{10.0, 20.0, 30.0},
+		Shape: []uint{3, 1},
+		Strides: []uint{1, 1},
+	}
+
+	targets := &Tensor[float64, uint]{
+		Data: []float64{11.0, 18.0, 27.0},
+		Shape: []uint{3, 1},
+		Strides: []uint{1, 1},
+	}
+
+	expectedRMSE := 2.1602
+	epsilon :=1e-4
+
+	actualRMSE, err := RootMeanSquareError(predictions, targets)
+	if err != nil {
+		t.Errorf("Failed to calculate RMSE: %v", err)
+	}
+
+	diff := math.Abs(actualRMSE - expectedRMSE)
+
+	if diff > epsilon {
+		t.Errorf("Diff of expected versus actual RMSE to large: %v > %v", diff, epsilon)
 	}
 }
