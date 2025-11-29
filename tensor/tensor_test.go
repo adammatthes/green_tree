@@ -530,3 +530,14 @@ func TestInit64(t *testing.T) {
 		t.Errorf("Unexpected Length of Tensor64: %v", len(t64.Data))
 	}
 }
+
+func TestRandom64(t *testing.T) {
+	rand64, err := InitRandomTensor64(10.0, 3, 2, 3)
+	if err != nil {
+		t.Errorf("Failed to init 64-bit random tensor")
+	}
+
+	if len(rand64.Shape) != 3 {
+		t.Errorf("Unexpected shape of 64-bit, random tensor")
+	}
+}

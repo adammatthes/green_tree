@@ -75,6 +75,11 @@ func InitRandomTensor[T Numeric, S Index](shape []S, maxVal T) (*Tensor[T, S], e
 	return t, nil
 }
 
+func InitRandomTensor64(maxVal float64, shape ...uint64) (*Tensor[float64, uint64], error) {
+	result, err := InitRandomTensor[float64, uint64](shape, maxVal)
+	return result, err
+}
+
 func InitTargetTensor[T Numeric, S Index](
 	xBase *Tensor[T, S],
 	weights []T) (*Tensor[T, S], error) {
