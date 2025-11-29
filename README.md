@@ -94,3 +94,6 @@ c, err := Zip(a, b)
 
 If any of the provided slices are not of the same length, the resulting slice of slices will have the length of the shortest initial slice, and err will not be nil.
 
+## Tensor
+
+While Python does not have a standard tensor library, I typically associate machine learning with Python, so I decided to have a Go at implementing my own tensor and Linear Regression model, see what I learn along the way. See the README inside the tensor folder for more information.
