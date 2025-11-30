@@ -21,6 +21,9 @@ t, err := InitTensor[float64, uint](shape)
 if err != nil {
 	// handle error
 }
+
+// alternate helper function; sets the types as float64 and uint64
+t, err = InitTensor64(shape)
 ```
 
 While the above example will create a tensor with all values set to zero, you can also make a tensor with random values populated:
@@ -31,6 +34,10 @@ t, err := InitRandomTensor[float64, uint](shape, 10.0) // second argument is max
 if err != nil {
 	// handle error
 }
+
+// alternate helper function, similar to InitTensor64
+// note the change in argument order to account for variadic uint64
+t, err = InitRandomTensor64(10.0, 100, 2)
 ```
 
 You can also initialize a target tensor that represents your expected values
@@ -98,7 +105,13 @@ momentum := 0.9
 clipThreshold := 5.0
 maxIterations := 100000
 
-lrm, err := InitLinearRegressionModel[float64, uint](numFeatures, learningRate, momentum, clipThreshold, maxIterations)
+lrm, err := InitLinearRegressionModel[float64, uint](
+	numFeatures,
+	learningRate,
+	momentum,
+	clipThreshold,
+	maxIterations)
+
 if err != nil {
 	// handle error
 }
