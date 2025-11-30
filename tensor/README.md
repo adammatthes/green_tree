@@ -23,7 +23,7 @@ if err != nil {
 }
 
 // alternate helper function; sets the types as float64 and uint64
-t, err = InitTensor64(shape)
+t, err = InitTensor64(100, 2)
 ```
 
 While the above example will create a tensor with all values set to zero, you can also make a tensor with random values populated:
