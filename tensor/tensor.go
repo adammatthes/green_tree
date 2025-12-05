@@ -486,6 +486,20 @@ func R2Score[T Numeric, S Index](
 	return T(r2), nil
 }
 
+func Sigmoid[T Numeric, S Index](Z *Tensor[T, S]) (*Tensor[T, S], error) {
+	result, err := InitTensor[T, S](Z.Shape)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	for n := 0; n < len(Z.Data); n++ {
+		floatZ := float64(Z.Data[n])
+		sigVal := 1.0 / (1.0 + math.Exp(floatZ))
+		result.Data[n] = T(sigVal)
+	}
+
+	return result, nil
+}
 /*
 
 Inverse() Tensor (Matrix Inversion - required for Normal Equation)

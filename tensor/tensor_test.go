@@ -541,3 +541,17 @@ func TestRandom64(t *testing.T) {
 		t.Errorf("Unexpected shape of 64-bit, random tensor")
 	}
 }
+
+func TestSigmoidZeroInput(t *testing.T) {
+	t1, _ := InitTensor64(1)
+	t2, err := Sigmoid(t1)
+	if err != nil {
+		t.Errorf("Failed to produce Sigmoid Tensor from single item: %v\n", err)
+	}
+
+	tol := 1e-9
+	diff := t2.Data[0] - 0.5
+	if diff > tol || diff < -tol {
+		t.Errorf("Unexpected result from single item Signmoid: %v != 0.5", t2.Data[0])
+	}
+}
