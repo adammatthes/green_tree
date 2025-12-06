@@ -494,7 +494,7 @@ func Sigmoid[T Numeric, S Index](Z *Tensor[T, S]) (*Tensor[T, S], error) {
 
 	for n := 0; n < len(Z.Data); n++ {
 		floatZ := float64(Z.Data[n])
-		sigVal := 1.0 / (1.0 + math.Exp(floatZ))
+		sigVal := 1.0 / (1.0 + math.Exp(-floatZ))
 		result.Data[n] = T(sigVal)
 	}
 

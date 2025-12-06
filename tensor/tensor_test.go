@@ -555,3 +555,42 @@ func TestSigmoidZeroInput(t *testing.T) {
 		t.Errorf("Unexpected result from single item Signmoid: %v != 0.5", t2.Data[0])
 	}
 }
+
+func TestSigmoidLargeValues(t *testing.T) {
+	t1, _ := InitTensor64(2)
+	t1.Data = []float64{100.0, -100.0}
+
+	t2, err := Sigmoid(t1)
+	if err != nil {
+		t.Errorf("Failed to produce Sigmoid Tensor from two large values: %v\n", err)
+	}
+
+	tol := 1e-12
+	approaches1 := t2.Data[0]
+	approaches0 := t2.Data[1]
+
+	if math.Abs(approaches1 - 1.0) > tol || math.Abs(approaches0) > tol {
+		t.Errorf("Unexpected Sigmoid result from large values: %v", t2.Data)
+	}
+}
+
+func TestSigmoidMultipleDimensions(t *testing.T) {
+	t1, _ := InitTensor64(2, 2)
+	t1.Data = []float64{0.0, 2.0, -2.0, 0.5}
+
+	t2, err := Sigmoid(t1)
+	if err != nil {
+		t.Errorf("Failed to produce Sigmoid values from 2D tensor: %v\n", err)
+	}
+
+	expectedValues := []float64{0.5, 0.880797078, 0.119202922, 0.622459331}
+
+	tol := 1e-9
+
+	for n := 0; n < len(t2.Data); n++ {
+		if math.Abs(t2.Data[n] - expectedValues[n]) > tol {
+			t.Errorf("Unexpected Sigmoid values in 2D result: got %v, expected %v", t2.Data, expectedValues)
+			break;
+		}
+	}
+}
