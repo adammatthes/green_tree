@@ -325,6 +325,19 @@ func (t *Tensor[T, S]) Subtract(other *Tensor[T, S]) (*Tensor[T, S], error) {
 	return result, nil
 }
 
+func (t *Tensor[T, S]) SubtractScalar(scalar T) (*Tensor[T, S], error) {
+	result, err := InitTensor[T, S](t.Shape)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	for n := 0; n < len(t.Data); n++ {
+		result.Data[n] = t.Data[n] - scalar
+	}
+
+	return result, nil
+}
+
 func (t *Tensor[T, S]) Valid() bool {
 	for n := S(0); n < S(len(t.Data)); n++ {
 		val := float64(t.Data[n])
