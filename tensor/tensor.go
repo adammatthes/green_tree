@@ -469,6 +469,19 @@ func (t *Tensor[T, S]) Mean() (T, error) {
 	return T(sum / float64(numElements)), nil
 }
 
+func (t *Tensor[T, S]) Sum() (T, error) {
+	if len(t.Data) == 0 {
+		return T(0), nil
+	}
+
+	var sum T
+	for _, val := range t.Data {
+		sum += val
+	}
+
+	return sum, nil
+}
+
 func R2Score[T Numeric, S Index](
 	predictions *Tensor[T, S],
 	targets *Tensor[T, S]) (T, error) {

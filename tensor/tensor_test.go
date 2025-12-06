@@ -634,3 +634,13 @@ func TestAddScalar(t *testing.T) {
 		}
 	}
 }
+
+func TestSum(t *testing.T) {
+	t1, _ := InitTensor64(2, 2)
+	t1.Data = []float64{1.0, 2.0, 3.0, 4.0}
+
+	sum, err := t1.Sum()
+	if err != nil {
+		t.Errorf("Unexpected Sum of tensor. Expected 10 got %v\n", sum)
+	}
+}
