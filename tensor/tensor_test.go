@@ -614,3 +614,23 @@ func TestSubtractScalar(t *testing.T) {
 		}
 	}
 }
+
+func TestAddScalar(t *testing.T) {
+	t1, _ := InitTensor64(2, 2)
+	t1.Data = []float64{1.0, 2.0, 3.0, 4.0}
+
+	t2, err := t1.AddScalar(1.0)
+	if err != nil {
+		t.Errorf("Failed to get resulting tensor from add scalar: %v\n", err)
+	}
+
+	expectedValues := []float64{2.0, 3.0, 4.0, 5.0}
+
+	tol := 1e-9
+	for n := 0; n < len(t2.Data); n++ {
+		diff := math.Abs(t2.Data[n] - expectedValues[n])
+		if diff > tol {
+			t.Errorf("Unexpected values in add scalar. Expected %v, got %v\n", expectedValues, t2.Data[n])
+		}
+	}
+}
