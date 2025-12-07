@@ -539,8 +539,20 @@ func Sigmoid[T Numeric, S Index](Z *Tensor[T, S]) (*Tensor[T, S], error) {
 
 	return result, nil
 }
-/*
 
-Inverse() Tensor (Matrix Inversion - required for Normal Equation)
+func Classify[T Numeric, S Index](predicted *Tensor[T, S], threshold T) (*Tensor[T, S], error) {
+	labels, err := InitTensor[T, S](predicted.Shape)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
 
-*/
+	for n := 0; n < len(predicted.Data); n++ {
+		if predicted.Data[n] >= threshold {
+			labels.Data[n] = T(1.0)
+		} else {
+			labels.Data[n] = T(0.0)
+		}
+	}
+
+	return labels, nil
+}

@@ -644,3 +644,21 @@ func TestSum(t *testing.T) {
 		t.Errorf("Unexpected Sum of tensor. Expected 10 got %v\n", sum)
 	}
 }
+
+func TestClassify(t *testing.T) {
+	t1, _ := InitTensor64(2, 2)
+	t1.Data = []float64{0.25, 0.75, 0.49, 0.51}
+
+	t2, err := Classify(t1, 0.5)
+	if err != nil {
+		t.Errorf("Failed to make classification tensor: %v\n", err)
+	}
+
+	expectedValues := []float64{0.0, 1.0, 0.0, 1.0}
+
+	for n := 0; n < len(t2.Data); n++ {
+		if t2.Data[n] != expectedValues[n] {
+			t.Errorf("Unexpected values in classification tensor: %v", t2.Data)
+		}
+	}
+}
