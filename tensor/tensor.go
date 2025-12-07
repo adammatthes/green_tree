@@ -618,3 +618,33 @@ func CalculateCost[T Numeric, S Index](predicted, expected *Tensor[T, S]) (T, er
 
 	return finalCost, nil
 }
+
+func (t *Tensor[T, S]) GetSlice(axis S, index S) (*Tensor[T, S], error) {
+	if axis >= S(len(t.Shape)) {
+		return &Tensor[T, S]{}, fmt.Errorf("axis index %v out of tensor bounds", axis)
+	}
+
+	if index >= t.Shape[axis] {
+		return &Tensor[T, S]{}, fmt.Errorf("slice index %v out of bounds for axis %v", index, axis)
+	}
+
+	startIndex := index * t.Strides[axis]
+
+	newShape := make([]S, 0, len(t.Shape) - 1)
+	newStrides := make([]S, 0, len(t.Strides) - 1)
+
+	for n := 0; n < len(t.Shape); n++ {
+		if S(n) != axis {
+			newShape = append(newShape, t.Shape[n])
+			newStrides = append(newStrides, t.Strides[n])
+		}
+	}
+
+	newTensor := Tensor[T, S] {
+		Shape:		newShape,
+		Strides:	newStrides,
+		Data: 		t.Data[startIndex:],
+	}
+
+	return &newTensor, nil
+}

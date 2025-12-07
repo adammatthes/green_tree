@@ -733,3 +733,43 @@ func TestCalculateCost(t *testing.T) {
 		t.Errorf("Unexpected Cost value: expected %v, got %v\n", expectedCost, actualCost)
 	}
 }
+
+func TestGetSlice(t *testing.T) {
+	t1, _ := InitTensor64(3, 4)
+	t1.Data = []float64{0.0, 0.0, 0.0, 1.1, 1.1, 1.1, 2.2, 2.2, 2.2, 3.3, 3.3, 3.3}
+
+	col, err := t1.GetSlice(1, 2)
+	if err != nil {
+		t.Errorf("Failed to make column slice: %v\n", err)
+	}
+
+	if col.Shape[0] != 3 || col.Strides[0] != 4 {
+		t.Errorf("Unexpected shape or stride of slice: %v %v\n", col.Shape, len(col.Data))
+	}
+
+	if col.Data[0] != 0 || col.Data[4] != 2.2 || col.Data[8] != 3.3 {
+		t.Errorf("Unexpected value in 1D slice: %v\n", col.Data)
+	}
+
+	t2, _ := InitTensor64(2, 3, 2)
+	t2.Data = []float64{0.0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 10.1, 11.11}
+
+	slice, err := t2.GetSlice(0, 1)
+	if err != nil {
+		t.Errorf("Failed to slice 2D tensor from 3D tensor: %v\n", err)
+	}
+
+	if slice.Shape[0] != 3 || slice.Shape[1] != 2 {
+		t.Errorf("Unexpected shape for 2D slice: %v\n", slice.Shape)
+	}
+
+	if len(slice.Data) != 6 {
+		t.Errorf("Unexpected flat length of 2D slice: %v\n", len(slice.Data))
+	}
+
+	if slice.Data[0] != 6.6 {
+		t.Errorf("Unexpected value in 2D slice: %v\n", slice.Data)
+	}
+
+
+}
