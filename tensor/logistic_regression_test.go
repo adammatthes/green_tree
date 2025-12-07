@@ -2,6 +2,7 @@ package tensor
 
 import (
 	"testing"
+	"math"
 )
 
 func TestInitLogisticRegression(t *testing.T) {
@@ -59,6 +60,43 @@ func TestFitLogisticRegression(t *testing.T) {
 
 	if model.Bias > -0.1 {
 		t.Errorf("Bias did not converge to a negative value: %v", model.Bias)
+	}
+
+}
+
+func TestPredictLogisticRegression(t *testing.T) {
+	tol := 1e-6
+
+	input, _ := InitTensor64(2, 2)
+	input.Data = []float64{1.0, 1.0, -1.0, -1.0}
+
+	weights, _ := InitTensor64(2, 1)
+	weights.Data = []float64{1.0, 1.0}
+
+	bias := -1.0
+
+	model, err := InitLogisticRegression[float64, uint64](uint64(2), bias, 0.01, uint64(100000))
+	if err != nil {
+		t.Errorf("Failed to init model during Predict Logistic Regression: %v\n", err)
+	}
+
+	model.Weights = weights
+
+	expected := []float64{0.731058578, 0.047425873}
+
+	predicted, err := model.Predict(input)
+	if err != nil {
+		t.Errorf("Predict method failed: %v\n", err)
+	}
+
+	if len(predicted.Data) != len(expected) {
+		t.Errorf("predicted does not match length of expected: got %v expected 2", len(predicted.Data))
+	}
+
+	for n := 0; n < len(expected); n++ {
+		if math.Abs(predicted.Data[n] - expected[n]) > tol {
+			t.Errorf("Unexpected values in prediction: got %v expected %v", predicted.Data, expected)
+		}
 	}
 
 }
