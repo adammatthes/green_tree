@@ -29,6 +29,7 @@ func TestInitLogisticRegression(t *testing.T) {
 }
 
 func TestFitLogisticRegression(t *testing.T) {
+	tol := 1e-2
 
 	featuresData := []float64{1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0}
 	features, _ := InitTensor64(4, 2)
@@ -49,17 +50,38 @@ func TestFitLogisticRegression(t *testing.T) {
 		t.Errorf("Failed to init logistic regression before Fit: %v\n", err)
 	}
 
+	initialPredict, _ := model.Predict(features)
+	initialCost, _ := CalculateCost(initialPredict, targets)
+
 	err = model.Fit(features, targets)
 	if err != nil {
 		t.Errorf("Error during logisitc Fit: %v\n", err)
 	}
 
-	if model.Weights.Data[0] < 0.1 || model.Weights.Data[1] < 0.1 {
-		t.Errorf("Unexpected values for weights in model: %v\n", model.Weights.Data)
+	finalPredict, _ := model.Predict(features)
+	finalCost, _ := CalculateCost(finalPredict, targets)
+
+	if finalCost >= initialCost || finalCost > 0.1 {
+		t.Errorf("Model failed to converge. Initial cost: %v, Final cost: %v\n", initialCost, finalCost)
 	}
 
-	if model.Bias > -0.1 {
-		t.Errorf("Bias did not converge to a negative value: %v", model.Bias)
+	predictedLabels, err := Classify(finalPredict, 0.5)
+	if err != nil {
+		t.Errorf("Classify failed: %v\n", err)
+	}
+
+	correctPredictions := 0
+
+	for n := 0; n < len(predictedLabels.Data); n++ {
+		if predictedLabels.Data[n] == targets.Data[n] {
+			correctPredictions++
+		}
+	}
+
+	accuracy := float64(correctPredictions) / float64(len(targets.Data))
+
+	if math.Abs(accuracy - 1.0) > tol {
+		t.Errorf("Model does not have high accuracy. Got %.2f, want 1.0", accuracy)
 	}
 
 }
