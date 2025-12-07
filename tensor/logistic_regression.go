@@ -10,6 +10,7 @@ type LogisticRegressionModel[T Numeric, S Index] struct {
 	Bias T
 	LearningRate T
 	NumIterations S
+	CostHistory []T
 }
 
 func InitLogisticRegression[T Numeric, S Index](numFeatures S,
@@ -23,11 +24,14 @@ func InitLogisticRegression[T Numeric, S Index](numFeatures S,
 		return &LogisticRegressionModel[T, S]{}, fmt.Errorf("Failed to create weights tensor during InitLogisticRegression: %v", err)
 	}
 
+	history := make([]T, 0, numIterations)
+
 	model := &LogisticRegressionModel[T, S] {
 		Weights:	weights,
 		Bias:		bias,
 		LearningRate:	learningRate,
 		NumIterations:	numIterations,
+		CostHistory:	history,
 	}
 
 	return model, nil
@@ -98,6 +102,13 @@ func (lrm *LogisticRegressionModel[T, S]) Fit(features *Tensor[T, S], targets *T
 			return err
 		}
 		lrm.Bias = lrm.Bias - lrm.LearningRate * gradientBias
+
+		cost, err := CalculateCost(predictedProbabilities, targets)
+		if err != nil {
+			return err
+		}
+
+		lrm.CostHistory = append(lrm.CostHistory, cost)
 	}
 
 	return nil

@@ -58,6 +58,13 @@ func TestFitLogisticRegression(t *testing.T) {
 		t.Errorf("Error during logisitc Fit: %v\n", err)
 	}
 
+	for n := 1; n < len(model.CostHistory); n++ {
+		curr := model.CostHistory[n]
+		if curr > model.CostHistory[n - 1] {
+			t.Errorf("Cost not declining at index %v", n)
+		}
+	}
+
 	finalPredict, _ := model.Predict(features)
 	finalCost, _ := CalculateCost(finalPredict, targets)
 
