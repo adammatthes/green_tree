@@ -662,3 +662,50 @@ func TestClassify(t *testing.T) {
 		}
 	}
 }
+
+func TestLog(t *testing.T) {
+	tol := 1e-9
+
+	t1, _ := InitTensor64(2)
+	t1.Data = []float64{1.0, math.E}
+
+	result1, err := Log(t1)
+	if err != nil {
+		t.Errorf("Log of tensor failed: %v\n", err)
+	}
+
+	expected1 := []float64{0.0, 1.0}
+
+	for n := 0; n < len(result1.Data); n++ {
+		if math.Abs(result1.Data[n] - expected1[n]) > tol {
+			t.Errorf("Unexpected values in log of 1 and E: %v", result1.Data)
+		}
+	}
+
+	t2, _ := InitTensor64(1)
+	t2.Data = []float64{0.0}
+
+	result2, err := Log(t2)
+	if err != nil {
+		t.Errorf("Log function failed on Log Zero: %v", err)
+	}
+
+	expected2 := []float64{math.Log(1e-12)}
+
+	if result2.Data[0] != expected2[0] {
+		t.Errorf("Unexpected value for Log Zero check: %v", result2.Data)
+	}
+
+	t3, _ := InitTensor64(1)
+	t3.Data = []float64{1.0 / math.E}
+
+	result3, err := Log(t3)
+	if err != nil {
+		t.Errorf("Log of reciprocal E failed: %v", err)
+	}
+
+	expected3 := []float64{-1.0}
+	if math.Abs(result3.Data[0] - expected3[0]) > tol {
+		t.Errorf("Unexpected value of Log reciprocal E: %v", result3.Data)
+	}
+}

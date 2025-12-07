@@ -556,3 +556,65 @@ func Classify[T Numeric, S Index](predicted *Tensor[T, S], threshold T) (*Tensor
 
 	return labels, nil
 }
+
+func Log[T Numeric, S Index](input *Tensor[T, S]) (*Tensor[T, S], error) {
+	result, err := InitTensor[T, S](input.Shape)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	epsilon := 1e-12 // prevents Log(0) or negative infinity
+
+	for n := 0; n < len(input.Data); n++ {
+		val := math.Log(float64(input.Data[n]) + epsilon)
+		result.Data[n] = T(val)
+	}
+
+	return result, nil
+}
+
+func CalculateCost[T Numeric, S Index](predicted, expected *Tensor[T, S]) (T, error) {
+	expectFirstShape := S(expected.Shape[0])
+
+	logPredicted, err := Log(predicted)
+	if err != nil {
+		return T(0.0), err
+	}
+
+	costTerm, err := expected.Hadamard(logPredicted)
+	if err != nil {
+		return T(0.0), err
+	}
+
+	oneMinusPredicted, err := predicted.SubtractScalar(T(1.0))
+	if err != nil {
+		return T(0.0), err
+	}
+
+	logOneMinusPredicted, err := Log(oneMinusPredicted)
+	if err != nil {
+		return T(0.0), err
+	}
+
+	oneMinusExpected, err := expected.SubtractScalar(T(1.0))
+	if err != nil {
+		return T(0.0), err
+	}
+
+	oneMinusesHadamard, err := oneMinusExpected.Hadamard(logOneMinusPredicted)
+	if err != nil {
+		return T(0.0), err
+	}
+
+	totalSampleLoss, err := costTerm.Add(oneMinusesHadamard)
+	if err != nil {
+		return T(0.0), err
+	}
+	sumOfAllLosses, err := totalSampleLoss.Sum()
+	if err != nil {
+		return T(0.0), err
+	}
+	finalCost := -(T(1.0) / T(expectFirstShape)) * sumOfAllLosses
+
+	return finalCost, nil
+}
