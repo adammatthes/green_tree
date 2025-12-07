@@ -475,8 +475,12 @@ func (t *Tensor[T, S]) Sum() (T, error) {
 	}
 
 	var sum T
-	for _, val := range t.Data {
-		sum += val
+	numElements := t.Shape[0]
+	stride := t.Strides[0]
+	dataSlice := t.Data
+	for n := S(0); n < numElements; n++ {
+		indexInSlice := n * stride
+		sum += dataSlice[indexInSlice]
 	}
 
 	return sum, nil
