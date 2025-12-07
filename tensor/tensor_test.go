@@ -709,3 +709,27 @@ func TestLog(t *testing.T) {
 		t.Errorf("Unexpected value of Log reciprocal E: %v", result3.Data)
 	}
 }
+
+func TestCalculateCost(t *testing.T) {
+	tol := 1e-6
+
+	expected, _ := InitTensor64(2, 1)
+	expected.Data = []float64{1.0, 0.0}
+
+	predicted, _ := InitTensor64(2, 1)
+	predicted.Data = []float64{0.9, 0.2}
+
+	expectedL1 := -(1.0 * math.Log(0.9) + 0.0 * math.Log(1.0 - 0.9))
+	expectedL2 := -(0.0 * math.Log(0.2) + 1.0 * math.Log(1.0 - 0.2))
+
+	expectedCost := (expectedL1 + expectedL2) / 2.0
+
+	actualCost, err := CalculateCost(predicted, expected)
+	if err != nil {
+		t.Errorf("Error during CalculateCost: %v\n", err)
+	}
+
+	if math.Abs(actualCost - expectedCost) > tol {
+		t.Errorf("Unexpected Cost value: expected %v, got %v\n", expectedCost, actualCost)
+	}
+}
