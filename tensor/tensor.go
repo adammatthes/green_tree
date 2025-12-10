@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"math"
+	"time"
 )
 
 type Numeric interface {
@@ -651,4 +652,68 @@ func (t *Tensor[T, S]) GetSlice(axis S, index S) (*Tensor[T, S], error) {
 	}
 
 	return &newTensor, nil
+}
+
+func ShuffleTensors[T Numeric, S Index](features *Tensor[T, S], labels *Tensor[T, S]) error {
+	if features.Shape[0] != labels.Shape[0] {
+		return fmt.Errorf("Feature and label tensors must have the same number of rows")
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	permutation := rand.Perm(int(features.Shape[0]))
+
+	shuffledFeatureData := make([]T, len(features.Data))
+	shuffledLabelData := make([]T, len(labels.Data))
+
+	featureRowStride := features.Strides[0]
+	labelRowStride := labels.Strides[0]
+
+	for i, originalIndex := range permutation {
+		origFeatureStart := S(originalIndex) * featureRowStride
+		shufFeatureStart := S(i) * featureRowStride
+
+		for j := S(0); j < featureRowStride; j++ {
+			shuffledFeatureData[shufFeatureStart + j] = features.Data[origFeatureStart + j]
+		}
+
+		origLabelStart := S(originalIndex) * labelRowStride
+		shufLabelStart := S(i) * labelRowStride
+
+		for j := S(0); j < labelRowStride; j++ {
+			shuffledLabelData[shufLabelStart + j] = labels.Data[origLabelStart + j]
+		}
+	}
+
+	features.Data = shuffledFeatureData
+	labels.Data = shuffledLabelData
+
+	return nil
+}
+
+func (t *Tensor[T, S]) GetBatchSlice(startRow, count S) (*Tensor[T, S], error) {
+	numSamples := t.Shape[0]
+
+	if startRow >= numSamples {
+		return &Tensor[T, S]{}, fmt.Errorf("startRow out of bounds for GetBatchSlice")
+	}
+
+	if startRow + count > numSamples {
+		return &Tensor[T, S]{}, fmt.Errorf("requested batch size exceeds bounds")
+	}
+
+	startIndex := startRow * t.Strides[0]
+	batchDataLength := count * t.Strides[0]
+	endIndex := startIndex + batchDataLength
+
+	if endIndex > S(len(t.Data)) {
+		return &Tensor[T, S]{}, fmt.Errorf("End index out of range of bounds")
+	}
+
+	result := &Tensor[T, S]{
+		Shape:		[]S{count, t.Shape[1]},
+		Strides:	t.Strides,
+		Data:		t.Data[startIndex: endIndex],
+	}
+	return result, nil
 }

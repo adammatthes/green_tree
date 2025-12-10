@@ -41,8 +41,8 @@ func TestFitLogisticRegression(t *testing.T) {
 
 	numFeatures := uint64(2)
 	bias := 0.0
-	learningRate := 0.1
-	numIterations := uint64(1000)
+	learningRate := 0.01
+	numIterations := uint64(10000)
 
 	model, err := InitLogisticRegression[float64, uint64](numFeatures, bias, learningRate, numIterations)
 
