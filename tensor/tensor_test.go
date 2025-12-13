@@ -831,3 +831,31 @@ func TestReduceSum(t *testing.T) {
 	}
 
 }
+
+func TestEuclideanDistance(t *testing.T) {
+	t1, _ := InitTensor64(4, 2)
+	t1.Data = []float64{5.1, 0.2, 4.9, 0.2, 7.0, 2.5, 6.4, 1.9}
+
+	query, _ := InitTensor64(1, 2)
+	query.Data = []float64{6.0, 1.0}
+
+	expectedData := []float64{1.204159457879203, 1.360147050873544, 1.802775637731994, 0.984885780179610}
+	expectedShape := uint64(4)
+
+	distances, err := EuclideanDistances(query, t1)
+	if err != nil {
+		t.Errorf("Euclidean distances failed: %v", err)
+	}
+
+	if distances.Shape[0] != expectedShape {
+		t.Errorf("Unexpected shape from EuclideanDistances: %v", distances.Shape)
+	}
+
+	tol := 1e-5
+
+	for n := 0; n < len(distances.Data); n++ {
+		if math.Abs(distances.Data[n] - expectedData[n]) > tol {
+			t.Errorf("Unexpected values from EuclideanDistances. Got %v, expected %v", distances.Data, expectedData)
+		}
+	}
+}

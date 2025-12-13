@@ -799,3 +799,60 @@ func ReduceSum[T Numeric, S Index](dsq *Tensor[T, S], axis S) (*Tensor[T, S], er
 
 	return result, nil
 }
+
+type ApplyFunc[T Numeric] func(val T) T
+
+func ElementWiseApply[T Numeric, S Index](input *Tensor[T, S], fn ApplyFunc[T]) (*Tensor[T, S], error) {
+	output, err := InitTensor[T, S](input.Shape)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	for n := 0; n < len(input.Data); n++ {
+		output.Data[n] = fn(input.Data[n])
+	}
+
+	return output, nil
+}
+
+func SquaredDifferences[T Numeric, S Index](input *Tensor[T, S]) (*Tensor[T, S], error) {
+	squaringFn := func(val T) T {
+		return val * val
+	}
+
+	return ElementWiseApply(input, squaringFn)
+}
+
+func ApplySquareRoot[T Numeric, S Index](input *Tensor[T, S]) (*Tensor[T, S], error) {
+	sqrtFn := func(val T) T {
+		v := float64(val)
+		return T(math.Sqrt(v))
+	}
+
+	return ElementWiseApply(input, sqrtFn)
+}
+
+func EuclideanDistances[T Numeric, S Index](QueryPoint, TrainingData *Tensor[T, S]) (*Tensor[T, S], error) {
+
+	broadcastResult, err := BroadcastSubtract(QueryPoint, TrainingData)
+	if err != nil {
+		return &Tensor[T, S]{}, fmt.Errorf("BroadcastSubtract failed: %v",err)
+	}
+
+	squaredResult, err := SquaredDifferences(broadcastResult)
+	if err != nil {
+		return &Tensor[T, S]{}, fmt.Errorf("SquaredDifferences failed: %v", err)
+	}
+
+	reduceResult, err := ReduceSum(squaredResult, S(1))
+	if err != nil {
+		return &Tensor[T, S]{}, fmt.Errorf("ReduceSum failed: %v", err)
+	}
+
+	distances, err := ApplySquareRoot(reduceResult)
+	if err != nil {
+		return &Tensor[T, S]{}, fmt.Errorf("ApplySquareRoot failed: %v", err)
+	}
+
+	return distances, nil
+}
