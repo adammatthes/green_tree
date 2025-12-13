@@ -4,6 +4,7 @@ import (
 	"testing"
 	"fmt"
 	"math"
+	"reflect"
 )
 
 func TestInitTensor(t *testing.T) {
@@ -772,4 +773,32 @@ func TestGetSlice(t *testing.T) {
 	}
 
 
+}
+
+func TestBroadcastSubtract(t *testing.T) {
+	t1, _ := InitTensor64(4, 2)
+	t1.Data = []float64{5.1, 0.2, 4.9, 0.2, 7.0, 2.5, 6.4, 1.9}
+
+	query, _ := InitTensor64(1, 2)
+	query.Data = []float64{6.0, 1.0}
+
+	expectedData := []float64{-0.9, -0.8, -1.1, -0.8, 1.0, 1.5, 0.4, 0.9}
+	expectedShape := []uint64{4, 2}
+
+	result, err := BroadcastSubtract(query, t1)
+	if err != nil {
+		t.Errorf("BroadcastSubtract failed: %v", err)
+	}
+
+	if !reflect.DeepEqual(result.Shape, expectedShape) {
+		t.Errorf("Unexpected Shape after broadcast. Got %v, expected %v", result.Shape, expectedShape)
+	}
+
+	tol := 1e-9
+	for n := 0; n < len(result.Data); n++ {
+
+		if math.Abs(result.Data[n] - expectedData[n]) > tol {
+			t.Errorf("Unexpected data after broadcast. Got %v, expected %v", result.Data, expectedData)
+		}
+	}
 }

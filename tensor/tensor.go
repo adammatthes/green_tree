@@ -717,3 +717,47 @@ func (t *Tensor[T, S]) GetBatchSlice(startRow, count S) (*Tensor[T, S], error) {
 	}
 	return result, nil
 }
+
+func BroadcastSubtract[T Numeric, S Index](QueryPoint, TrainingData *Tensor[T, S]) (*Tensor[T, S], error) {
+	if len(QueryPoint.Shape) != 2 || len(TrainingData.Shape) != 2 {
+		return &Tensor[T, S]{}, errors.New("tensors must be 2D for broadcasting")
+	}
+
+	if QueryPoint.Shape[0] != 1 {
+		return &Tensor[T, S]{}, errors.New("QueryPoint must have leading dimension of 1")
+	}
+
+	if QueryPoint.Shape[1] != TrainingData.Shape[1] {
+		return &Tensor[T, S]{}, errors.New("Feature dimensions must match for broadcast subtraction")
+	}
+
+	numSamples := TrainingData.Shape[0]
+	numFeatures := TrainingData.Shape[1]
+
+	result, err := InitTensor[T, S]([]S{numSamples, numFeatures})
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	for n := S(0); n < numFeatures; n++ {
+		valQuery, _ := QueryPoint.Get([]S{0, n})
+
+		for m := S(0); m < numSamples; m++ {
+			valTrain, err := TrainingData.Get([]S{m, n})
+			if err != nil {
+				fmt.Printf("Failed to get training value: %v\n", err)
+				continue
+			}
+
+			idxResult, err := result.LinearIndex([]S{m, n})
+			if err != nil {
+				fmt.Printf("Failed to get linear index: %v\n", err)
+				continue
+			}
+
+			result.Data[idxResult] = valTrain - valQuery
+		}
+	}
+
+	return result, nil
+}
