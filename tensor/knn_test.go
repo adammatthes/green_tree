@@ -52,3 +52,44 @@ func TestFindKNearestLabels(t *testing.T) {
 		}
 	}
 }
+
+func TestSimpleMajority(t *testing.T) {
+	neighbors := []Neighbor[float64] {
+		{Distance: 0.5, Label: "Dog"},
+		{Distance: 0.6, Label: "Cat"},
+		{Distance: 0.7, Label: "Dog"},
+		{Distance: 0.8, Label: "Cat"},
+		{Distance: 0.9, Label: "Dog"},
+	}
+
+	expected := "Dog"
+
+	result, err := MajorityVote(neighbors)
+	if err != nil {
+		t.Errorf("MajorityVote failed: %v", err)
+	}
+
+	if result != expected {
+		t.Errorf("Unexpected value from MajorityVote. Got %v, expected %v", result, expected)
+	}
+}
+
+func TestTieBreaker(t *testing.T) {
+	neighbors := []Neighbor[float64] {
+		{Distance: 0.1, Label: "Apple"},
+		{Distance: 0.2, Label: "Banana"},
+		{Distance: 0.3, Label: "Apple"},
+		{Distance: 0.4, Label: "Banana"},
+	}
+
+	expected := "Apple"
+
+	result, err := MajorityVote(neighbors)
+	if err != nil {
+		t.Errorf("MajorityVote failed in Tie Breaker: %v", err)
+	}
+
+	if result != expected {
+		t.Errorf("Unexpected result for Tie-Breaker. Got %v, expected %v", result, expected)
+	}
+}
