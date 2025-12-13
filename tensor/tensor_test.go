@@ -802,3 +802,32 @@ func TestBroadcastSubtract(t *testing.T) {
 		}
 	}
 }
+
+func TestReduceSum(t *testing.T) {
+	t1, _ := InitTensor64(4, 2)
+	t1.Data = []float64{0.81, 0.64, 1.21, 0.64, 1.00, 2.25, 0.16, 0.81}
+
+	expectedShape := uint64(4)
+
+	expectedData := []float64{1.45, 1.85, 3.25, 0.97}
+
+	axisToReduce := uint64(1)
+	result, err := ReduceSum(t1, axisToReduce)
+
+	if err != nil {
+		t.Errorf("ReduceSum failed: %v", err)
+	}
+
+	if result.Shape[0] != expectedShape {
+		t.Errorf("Unexpected shape for ReduceSum Result: %v", result.Shape)
+	}
+
+	tol := 1e-9
+
+	for n := 0; n < len(result.Data); n++ {
+		if math.Abs(result.Data[n] - expectedData[n]) > tol {
+			t.Errorf("Unexpected values in result. Got %v, expected %v", result.Data, expectedData)
+		}
+	}
+
+}

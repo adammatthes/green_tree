@@ -761,3 +761,41 @@ func BroadcastSubtract[T Numeric, S Index](QueryPoint, TrainingData *Tensor[T, S
 
 	return result, nil
 }
+
+func ReduceSum[T Numeric, S Index](dsq *Tensor[T, S], axis S) (*Tensor[T, S], error) {
+	if len(dsq.Shape) != 2 {
+		return &Tensor[T, S]{}, errors.New("ReduceSum currently only supports 2D tensors and an axis of 0 or 1")
+	}
+
+	if axis != 1 {
+		return &Tensor[T, S]{}, errors.New("K Nearest Neighbors requires reduction along axis 1 (the features)")
+	}
+
+	numSamples := dsq.Shape[0]
+	numFeatures := dsq.Shape[1]
+
+	result, err := InitTensor[T, S]([]S{numSamples})
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	for n := S(0); n < numSamples; n++ {
+		var sum T = *new(T)
+
+		for m := S(0); m < numFeatures; m++ {
+			val, err := dsq.Get([]S{n, m})
+			if err != nil {
+				fmt.Printf("Error accessing value from Dsq")
+				continue
+			}
+			sum += val
+		}
+
+		err = result.Set([]S{n}, sum)
+		if err != nil {
+			return &Tensor[T, S]{}, fmt.Errorf("Error setting data during ReduceSum: %v", err)
+		}
+	}
+
+	return result, nil
+}
