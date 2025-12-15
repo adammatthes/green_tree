@@ -762,6 +762,19 @@ func BroadcastSubtract[T Numeric, S Index](QueryPoint, TrainingData *Tensor[T, S
 	return result, nil
 }
 
+func BroadcastAdd[T Numeric, S Index](QueryPoint, TrainingData *Tensor[T, S]) (*Tensor[T, S], error) {
+	negateFn := func(val T) T {
+		return -val
+	}
+
+	negatedTraining, err := ElementWiseApply(TrainingData, negateFn)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	return BroadcastSubtract(QueryPoint, negatedTraining)
+}
+
 func ReduceSum[T Numeric, S Index](dsq *Tensor[T, S], axis S) (*Tensor[T, S], error) {
 	if len(dsq.Shape) != 2 {
 		return &Tensor[T, S]{}, errors.New("ReduceSum currently only supports 2D tensors and an axis of 0 or 1")
