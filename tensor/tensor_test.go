@@ -25,7 +25,7 @@ func TestLinearIndex(t *testing.T) {
 
 	testTensor, err := InitTensor[int, uint]([]uint{5, 5})
 
-	offset, err := testTensor.LinearIndex([]uint{0, 0})
+	offset, err := testTensor.LinearIndex(0, 0)
 	if err != nil {
 		t.Errorf("Error getting offset: %v\n", err)
 	}
@@ -34,7 +34,7 @@ func TestLinearIndex(t *testing.T) {
 		t.Errorf("Offset miscalculated: %v, expected 0\n", offset)
 	}
 
-	offset, err = testTensor.LinearIndex([]uint{1, 1})
+	offset, err = testTensor.LinearIndex(1, 1)
 	if err != nil {
 		t.Errorf("Error getting offset: %v\n", err)
 	}
@@ -43,7 +43,7 @@ func TestLinearIndex(t *testing.T) {
 		t.Errorf("Offset miscalculated: %v, expected 6\n", offset)
 	}
 
-	offset, err = testTensor.LinearIndex([]uint{4, 4})
+	offset, err = testTensor.LinearIndex(4, 4)
 	if err != nil {
 		t.Errorf("Error getting offset: %v\n", err)
 	}
@@ -52,12 +52,12 @@ func TestLinearIndex(t *testing.T) {
 		t.Errorf("Offset miscalculated: %v, expected 24\n", offset)
 	}
 
-	offset, err = testTensor.LinearIndex([]uint{1, 1, 1})
+	offset, err = testTensor.LinearIndex(1, 1, 1)
 	if err == nil {
 		t.Errorf("Mismatched coordinate dimension not caught\n")
 	}
 
-	offset, err = testTensor.LinearIndex([]uint{3, 10})
+	offset, err = testTensor.LinearIndex(3, 10)
 	if err == nil {
 		t.Errorf("Out of bounds coordinate value not caught\n")
 	}
@@ -71,7 +71,7 @@ func TestGetMethod(t *testing.T) {
 
 	tt.Data[4] = 42 // artificially setting for test
 
-	val, err := tt.Get([]uint{0, 4})
+	val, err := tt.Get(0, 4)
 	if err != nil {
 		t.Errorf("Get method failed: %v\n", err)
 	}
@@ -80,12 +80,12 @@ func TestGetMethod(t *testing.T) {
 		t.Errorf("Did not Get expected value: %v != %v", val, 42)
 	}
 
-	val, err = tt.Get([]uint{10, 10})
+	val, err = tt.Get(10, 10)
 	if err == nil {
 		t.Errorf("Error not relayed from Linear Index in Get\n")
 	}
 
-	val, err = tt.Get([]uint{1, 1, 1})
+	val, err = tt.Get(1, 1, 1)
 	if err == nil {
 		t.Errorf("Error not relayed from Linear Index in Get\n")
 	}
@@ -99,12 +99,12 @@ func TestSetMethod(t *testing.T) {
 
 	coord := []uint{0, 1}
 
-	err = tt.Set(coord, 42)
+	err = tt.Set(42, coord...)
 	if err != nil {
 		t.Errorf("Set failed: %v\n", err)
 	}
 
-	val, err := tt.Get(coord)
+	val, err := tt.Get(coord...)
 	if err != nil {
 		t.Errorf("Error during Get after Set: %v\n", err)
 	}
@@ -113,12 +113,12 @@ func TestSetMethod(t *testing.T) {
 		t.Errorf("Value was not Set correctly. Expected 42, got %v\n", val)
 	}
 
-	err = tt.Set([]uint{1, 1, 1}, 5)
+	err = tt.Set(5, 1, 1, 1)
 	if err == nil {
 		t.Errorf("Error from Linear Index not relayed from Set\n")
 	}
 
-	err = tt.Set([]uint{10, 10}, 5)
+	err = tt.Set(5, 10, 10)
 	if err == nil {
 		t.Errorf("Error from Linear Index not relayed from Set\n")
 	}
@@ -161,38 +161,38 @@ func TestTranspose(t *testing.T) {
 
 func TestDot(t *testing.T) {
 	tt1, _ := InitTensor[int, uint]([]uint{2, 2})
-	tt1.Set([]uint{0, 0}, 1)
-	tt1.Set([]uint{0, 1}, 2)
-	tt1.Set([]uint{1, 0}, 3)
-	tt1.Set([]uint{1, 1}, 4)
+	tt1.Set(1, 0, 0)
+	tt1.Set(2, 0, 1)
+	tt1.Set(3, 1, 0)
+	tt1.Set(4, 1, 1)
 
 	tt2, _ := InitTensor[int, uint]([]uint{2, 2})
-	tt2.Set([]uint{0, 0}, 5)
-	tt2.Set([]uint{0, 1}, 6)
-	tt2.Set([]uint{1, 0}, 7)
-	tt2.Set([]uint{1, 1}, 8)
+	tt2.Set(5, 0, 0)
+	tt2.Set(6, 0, 1)
+	tt2.Set(7, 1, 0)
+	tt2.Set(8, 1, 1)
 
 	result, err := tt1.Dot(tt2)
 	if err != nil {
 		t.Errorf("Error during 2x2 dot product")
 	}
 
-	val, _ := result.Get([]uint{0, 0})
+	val, _ := result.Get(0, 0)
 	if val != 19 {
 		t.Errorf("Unexpected value for Dot. Got %v, expected 19\n %v\n", val, result.Data)
 	}
 
-	val, _ = result.Get([]uint{0, 1})
+	val, _ = result.Get(0, 1)
 	if val != 22 {
 		t.Errorf("Unexpected value for Dot. Got %v, expected 22\n %v\n", val, result.Data)
 	}
 
-	val, _ = result.Get([]uint{1, 0})
+	val, _ = result.Get(1, 0)
 	if val != 43 {
 		t.Errorf("Unexpected value for Dot. Got %v, expected 43\n %v\n", val, result.Data)
 	}
 
-	val, _ = result.Get([]uint{1, 1})
+	val, _ = result.Get(1, 1)
 	if val != 50 {
 		t.Errorf("Unexpected value for Dot. Got %v, expected 50\n %v\n", val, result.Data)
 	}
@@ -200,20 +200,20 @@ func TestDot(t *testing.T) {
 
 func TestDotAsymmetrical(t *testing.T) {
 	t1, _ := InitTensor[int, uint]([]uint{2, 3})
-	t1.Set([]uint{0, 0}, 1)
-	t1.Set([]uint{0, 1}, 2)
-	t1.Set([]uint{0, 2}, 3)
-	t1.Set([]uint{1, 0}, 4)
-	t1.Set([]uint{1, 1}, 5)
-	t1.Set([]uint{1, 2}, 6)
+	t1.Set(1, 0, 0)
+	t1.Set(2, 0, 1)
+	t1.Set(3, 0, 2)
+	t1.Set(4, 1, 0)
+	t1.Set(5, 1, 1)
+	t1.Set(6, 1, 2)
 	
 	t2, _ := InitTensor[int, uint]([]uint{3, 2})
-	t2.Set([]uint{0, 0}, 7)
-	t2.Set([]uint{0, 1}, 8)
-	t2.Set([]uint{1, 0}, 9)
-	t2.Set([]uint{1, 1}, 10)
-	t2.Set([]uint{2, 0}, 11)
-	t2.Set([]uint{2, 1}, 12)
+	t2.Set(7, 0, 0)
+	t2.Set(8, 0, 1)
+	t2.Set(9, 1, 0)
+	t2.Set(10, 1, 1)
+	t2.Set(11, 2, 0)
+	t2.Set(12, 2, 1)
 
 	result, err := t1.Dot(t2)
 	if err != nil {
@@ -224,22 +224,22 @@ func TestDotAsymmetrical(t *testing.T) {
 		t.Errorf("Assymetrical dot product did not result in expected shape")
 	}
 
-	val, _ := result.Get([]uint{0, 0})
+	val, _ := result.Get(0, 0)
 	if val != 58 {
 		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 58\n %v\n", val, result.Data)
 	}
 
-	val, _ = result.Get([]uint{0, 1})
+	val, _ = result.Get(0, 1)
 	if val != 64 {
 		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 64\n %v\n", val, result.Data)
 	}
 
-	val, _ = result.Get([]uint{1, 0})
+	val, _ = result.Get(1, 0)
 	if val != 139 {
 		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 139\n %v\n", val, result.Data)
 	}
 
-	val, _ = result.Get([]uint{1, 1})
+	val, _ = result.Get(1, 1)
 	if val != 154 {
 		t.Errorf("Unexpected value for asymmetrical dot. Got %v expected 154\n %v\n", val, result.Data)
 	}
@@ -856,6 +856,56 @@ func TestEuclideanDistance(t *testing.T) {
 	for n := 0; n < len(distances.Data); n++ {
 		if math.Abs(distances.Data[n] - expectedData[n]) > tol {
 			t.Errorf("Unexpected values from EuclideanDistances. Got %v, expected %v", distances.Data, expectedData)
+		}
+	}
+}
+
+func TestContiguous(t *testing.T) {
+	t1, _ := InitTensor64(2, 3)
+	t1.Data = []float64{1, 2, 3, 4, 5, 6}
+
+	transposed, err := t1.Transpose()
+	if err != nil {
+		t.Errorf("Traspose failed during contiguous test: %v", err)
+	}
+
+	if transposed.IsContiguous() {
+		t.Errorf("Transposed Tensor should not be contiguous")
+	}
+
+	contiguous, err := transposed.Contiguous()
+	if err != nil {
+		t.Errorf("Contiguous failed: %v", err)
+	}
+
+	expectedShape := []uint64{3, 2}
+	if !reflect.DeepEqual(contiguous.Shape, expectedShape) {
+		t.Errorf("Unexpected Shape. Got %v, expected %v", contiguous.Shape, expectedShape)
+	}
+
+	expectedData := []float64{1, 4, 2, 5, 3, 6}
+	tol := 1e-9
+	for n := 0; n < len(expectedData); n++ {
+		if math.Abs(contiguous.Data[n] - expectedData[n]) > tol {
+			t.Errorf("Unexpected values. Got %v, expected %v", contiguous.Data, expectedData)
+		}
+	}
+
+	if !contiguous.IsContiguous() {
+		t.Errorf("Result of IsContiguous should be true")
+	}
+
+	t3d, _ := InitTensor64(2, 2, 2)
+	t3d.Data = []float64{0, 1, 2, 3, 4, 5, 6, 7}
+
+	t3dTrans, _ := t3d.Transpose(0, 2, 1)
+	t3dCont, _ := t3dTrans.Contiguous()
+
+	expected3dData := []float64{0, 2, 1, 3, 4, 6, 5, 7}
+
+	for n := 0; n < len(expected3dData); n++ {
+		if math.Abs(t3dCont.Data[n] - expected3dData[n]) > tol {
+			t.Errorf("3D contiguous failed. Got %v, expected %v", t3dCont.Data, expected3dData)
 		}
 	}
 }

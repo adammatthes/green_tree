@@ -61,7 +61,7 @@ func InitTensor64(shape ...uint64) (*Tensor[float64, uint64], error) {
 func InitRandomTensor[T Numeric, S Index](shape []S, maxVal T) (*Tensor[T, S], error) {
 	t, err := InitTensor[T, S](shape)
 	if err != nil {
-		return &Tensor[T, S]{}, nil
+		return &Tensor[T, S]{}, fmt.Errorf("InitRandomTensor Failed: %v", err)
 	}
 
 	rangeWidth := 2 * float64(maxVal)
@@ -117,34 +117,34 @@ func InitTargetTensor[T Numeric, S Index](
 	return y, nil
 }
 
-func (t *Tensor[T, S]) LinearIndex(coord []S) (S, error) {
+func (t *Tensor[T, S]) LinearIndex(coord ...S) (S, error) {
 	if len(coord) != len(t.Shape) {
 		return 0, errors.New(fmt.Sprintf("Coordinate dimensions (%v) do not match shape (%v)\n", coord, t.Shape))
 	}
 
 	offset := S(0)
 
-	for n := 0; n < len(coord); n++ {
-		if coord[n] >= t.Shape[n] {
-			return 0, errors.New(fmt.Sprintf("Coordinate dimension (%v) exceeds bounds of shape (%v)\n", coord[n], t.Shape[n]))
+	for n, c := range coord {
+		if c >= t.Shape[n] {
+			return 0, errors.New(fmt.Sprintf("Coordinate dimension (%v) exceeds bounds of shape (%v)\n", c, t.Shape[n]))
 		}
-		offset += coord[n] * t.Strides[n]
+		offset += c * t.Strides[n]
 	}
 
 	return offset, nil
 }
 
-func (t *Tensor[T, S]) Get(coord []S) (T, error) {
-	offset, err := t.LinearIndex(coord)
+func (t *Tensor[T, S]) Get(coord ...S) (T, error) {
+	offset, err := t.LinearIndex(coord...)
 	if err != nil {
-		return *new(T), errors.New(fmt.Sprintf("LinearIndex failed: %v", err))
+		return *new(T), err
 	}
 
 	return t.Data[offset], nil
 }
 
-func (t *Tensor[T, S]) Set(coord []S, val T) error {
-	offset, err := t.LinearIndex(coord)
+func (t *Tensor[T, S]) Set(val T, coord ...S) error {
+	offset, err := t.LinearIndex(coord...)
 	if err != nil {
 		return err
 	}
@@ -213,8 +213,6 @@ func (t *Tensor[T, S]) Dot(other *Tensor[T, S]) (*Tensor[T, S], error) {
 	K2 := other.Shape[batchSizeB]
 	N := other.Shape[batchSizeB + 1]
 
-	totalMatrixSizeA := M * K1
-	totalMatrixSizeB := K2 * N
 
 	if K1 != K2 {
 		return &Tensor[T, S]{}, errors.New(fmt.Sprintf("Inner dimensions do not match. %v != %v", K1, K2))
@@ -243,28 +241,39 @@ func (t *Tensor[T, S]) Dot(other *Tensor[T, S]) (*Tensor[T, S], error) {
 	C := N
 	batchCount := totalMul
 
-	for batchIdx := S(0); batchIdx < batchCount; batchIdx++ {
-		batchOffsetA := batchIdx * totalMatrixSizeA
-		batchOffsetB := batchIdx * totalMatrixSizeB
+	strideARow := t.Strides[batchSizeA]
+	strideACol := t.Strides[batchSizeA + 1]
+	strideBRow := other.Strides[batchSizeA]
+	strideBCol := other.Strides[batchSizeA + 1]
+	strideResRow := result.Strides[batchSizeA]
+	strideResCol := result.Strides[batchSizeA + 1]
 
-		totalMatrixSizeResult := M * N
-		batchOffsetResult := batchIdx * totalMatrixSizeResult
+	matrixSizeA := M * K
+	matrixSizeB := K * N
+	matrixSizeRes := M * N
+
+	for batchIdx := S(0); batchIdx < batchCount; batchIdx++ {
+		batchOffsetA := batchIdx * matrixSizeA
+		batchOffsetB := batchIdx * matrixSizeB
+
+		batchOffsetResult := batchIdx * matrixSizeRes
 
 		for i := S(0); i < R; i++ {
+			rowOffA := batchOffsetA + i * strideARow
+			rowOffRes := batchOffsetResult + i * strideResRow
 			for j := S(0); j < C; j++ {
 				sum := *new(T)
 
-				for k := S(0); k < K; k++ {
-					idxA := batchOffsetA + (i * t.Strides[batchSizeA]) + (k * t.Strides[batchSizeA + 1])
-					valA := t.Data[idxA]
+				colOffB := batchOffsetB + j * strideBCol
 
-					idxB := batchOffsetB + (k * other.Strides[batchSizeB]) + (j * other.Strides[batchSizeB + 1])
-					valB := other.Data[idxB]
+				for k := S(0); k < K; k++ {
+					valA := t.Data[rowOffA + k * strideACol]
+
+					valB := other.Data[colOffB + k * strideBRow]
 
 					sum += valA * valB
 				}
-				idxResult := batchOffsetResult + (i * result.Strides[batchSizeA]) + (j * result.Strides[batchSizeA + 1])
-				result.Data[idxResult] = sum
+				result.Data[rowOffRes + j * strideResCol] = sum
 			}
 		}
 	}
@@ -659,9 +668,11 @@ func ShuffleTensors[T Numeric, S Index](features *Tensor[T, S], labels *Tensor[T
 		return fmt.Errorf("Feature and label tensors must have the same number of rows")
 	}
 
-	rand.Seed(time.Now().UnixNano())
+	seed := time.Now().UnixNano()
+	source := rand.NewSource(seed)
+	r := rand.New(source)
 
-	permutation := rand.Perm(int(features.Shape[0]))
+	permutation := r.Perm(int(features.Shape[0]))
 
 	shuffledFeatureData := make([]T, len(features.Data))
 	shuffledLabelData := make([]T, len(labels.Data))
@@ -740,16 +751,16 @@ func BroadcastSubtract[T Numeric, S Index](QueryPoint, TrainingData *Tensor[T, S
 	}
 
 	for n := S(0); n < numFeatures; n++ {
-		valQuery, _ := QueryPoint.Get([]S{0, n})
+		valQuery, _ := QueryPoint.Get(0, n)
 
 		for m := S(0); m < numSamples; m++ {
-			valTrain, err := TrainingData.Get([]S{m, n})
+			valTrain, err := TrainingData.Get(m, n)
 			if err != nil {
 				fmt.Printf("Failed to get training value: %v\n", err)
 				continue
 			}
 
-			idxResult, err := result.LinearIndex([]S{m, n})
+			idxResult, err := result.LinearIndex(m, n)
 			if err != nil {
 				fmt.Printf("Failed to get linear index: %v\n", err)
 				continue
@@ -796,7 +807,7 @@ func ReduceSum[T Numeric, S Index](dsq *Tensor[T, S], axis S) (*Tensor[T, S], er
 		var sum T = *new(T)
 
 		for m := S(0); m < numFeatures; m++ {
-			val, err := dsq.Get([]S{n, m})
+			val, err := dsq.Get(n, m)
 			if err != nil {
 				fmt.Printf("Error accessing value from Dsq")
 				continue
@@ -804,7 +815,7 @@ func ReduceSum[T Numeric, S Index](dsq *Tensor[T, S], axis S) (*Tensor[T, S], er
 			sum += val
 		}
 
-		err = result.Set([]S{n}, sum)
+		err = result.Set(sum, n)
 		if err != nil {
 			return &Tensor[T, S]{}, fmt.Errorf("Error setting data during ReduceSum: %v", err)
 		}
@@ -868,4 +879,53 @@ func EuclideanDistances[T Numeric, S Index](QueryPoint, TrainingData *Tensor[T, 
 	}
 
 	return distances, nil
+}
+
+func (t *Tensor[T, S]) Contiguous() (*Tensor[T, S], error) {
+	if t.IsContiguous() {
+		return t, nil
+	}
+
+	result, err := InitTensor[T, S](t.Shape)
+	if err != nil {
+		return &Tensor[T, S]{}, err
+	}
+
+	rank := len(t.Shape)
+	coords := make([]S, rank)
+	totalElements := S(len(result.Data))
+	sourceOffset := S(0)
+
+	for n := S(0); n < totalElements; n++ {
+		result.Data[n] = t.Data[sourceOffset]
+
+		for d := rank - 1; d >= 0; d-- {
+			coords[d]++
+			sourceOffset += t.Strides[d]
+
+			if coords[d] < t.Shape[d] {
+				break
+			}
+
+
+			sourceOffset -= S(t.Shape[d]) * t.Strides[d]
+			coords[d] = 0
+			if d == 0 {
+				break
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func (t *Tensor[T, S]) IsContiguous() bool {
+	expectedStride := S(1)
+	for n := len(t.Shape) - 1; n >= 0; n-- {
+		if t.Strides[n] != expectedStride {
+			return false
+		}
+		expectedStride *= t.Shape[n]
+	}
+	return true
 }
